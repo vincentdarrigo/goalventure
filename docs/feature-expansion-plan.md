@@ -36,7 +36,9 @@ Minimal endpoint surface: `POST /accounts` (lazy creation), `POST /device-link-c
 ## Build order (each phase independently shippable/testable, same rigor as Phases 0–9)
 
 10. **Supplements — core CRUD.** `supplement`/`supplementDose` migration + `supplementRepo.ts`, Settings > Supplements screen. — **DONE**
-11. **Supplements — Today integration.** `src/domain/supplements/timing.ts`, `useTodaySupplements`, a Supplements checklist card on Today, take/skip/undo via `onceGuard` + `ensureDailySnapshot`.
+11. **Supplements — Today integration.** `src/domain/supplements/timing.ts`, `useTodaySupplements`, a Supplements checklist card on Today, take/skip/undo via `onceGuard` + `ensureDailySnapshot`. — **DONE**
+
+    > **Addendum:** `computeSupplementUrgency` deliberately only flags two cases — `fasted` (missed once the eating window opens) and `specific_time` (overdue once its time passes) — because those are the only two timings with a reliable signal to compute from today's data model. `bedtime`/`with_meal`/`pre_workout` always report `'normal'` rather than guessing (no bedtime setting exists yet; no cross-reference between a `pre_workout` supplement and which routine step is "the workout"). Widening this is a natural future enhancement once those signals exist, not a gap in what was asked for now. Dose-taking uses delete-to-revert-to-pending (no stored `'pending'` status), unlike `routineCompletion` which does store an explicit `'pending'` value — a deliberate difference: `supplementDose`'s status enum was scoped to `'taken' | 'skipped'` only in the plan, so "no row" is the only representation of pending, kept consistent throughout the repo/domain/hook rather than introducing a second convention.
 12. **Pantry — data model + manual entry.** `ingredient` table + repo, manage-ingredients screen (manual only).
 13. **Pantry — USDA FDC integration.** `src/services/nutrition-data/`, search-and-prefill, `.env.example`.
 14. **Pantry — compose meal presets from ingredients.** `isComposed` + `mealPresetIngredient`, live-nutrition query, `foodLog` gains `sourceIngredientId`/`sourceStackId`.

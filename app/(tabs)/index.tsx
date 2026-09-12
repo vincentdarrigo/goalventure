@@ -1,17 +1,22 @@
 import { router } from 'expo-router';
+import { Duration } from 'luxon';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { HydrationCard } from '@/src/components/today/HydrationCard';
 import { MealLogGrid } from '@/src/components/today/MealLogGrid';
 import { RoutineChecklist } from '@/src/components/today/RoutineChecklist';
+import { SupplementChecklist } from '@/src/components/today/SupplementChecklist';
 import { WeeklyBudgetCard } from '@/src/components/today/WeeklyBudgetCard';
 import { todayIsoInZone } from '@/src/domain/datetime';
+import type { FastingState } from '@/src/domain/fasting/fastingState';
+import type { SupplementDoseStatus } from '@/src/domain/supplements/timing';
 import type { DayType, ResolvedDayType } from '@/src/domain/types';
 import { useFastingState } from '@/src/hooks/useFastingState';
 import { type LogMealInput, useLogMeal } from '@/src/hooks/useLogMeal';
 import { useTodayHydration } from '@/src/hooks/useTodayHydration';
 import { useTodayMacros } from '@/src/hooks/useTodayMacros';
 import { useTodayRoutine } from '@/src/hooks/useTodayRoutine';
+import { useTodaySupplements } from '@/src/hooks/useTodaySupplements';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
 import { useWeeklyBudget } from '@/src/hooks/useWeeklyBudget';
 import { formatDuration } from '@/src/lib/formatDuration';
@@ -40,6 +45,14 @@ function placeholderResolved(date: string): ResolvedDayType {
   return { date, dayType: PLACEHOLDER_DAY_TYPE, source: 'schedule' };
 }
 
+const PLACEHOLDER_FASTING_STATE: FastingState = {
+  phase: 'fasting',
+  isFastDay: true,
+  windowStartsAt: null,
+  windowEndsAt: null,
+  timeRemaining: Duration.fromMillis(0),
+};
+
 export default function TodayScreen() {
   const profile = useUserProfile();
 
@@ -66,6 +79,11 @@ function TodayContent({ timezone, hydrationGoalOz }: { timezone: string; hydrati
   const macros = useTodayMacros(today, timezone);
   const weeklyBudget = useWeeklyBudget(today.date, timezone);
   const hydration = useTodayHydration(today, timezone, hydrationGoalOz);
+  const supplements = useTodaySupplements(
+    today,
+    result.status === 'ready' ? result.fastingState : PLACEHOLDER_FASTING_STATE,
+    timezone
+  );
   const logMeal = useLogMeal(yesterday, today, timezone);
 
   async function handleLog(input: LogMealInput) {
@@ -81,6 +99,15 @@ function TodayContent({ timezone, hydrationGoalOz }: { timezone: string; hydrati
       await hydration.addOunces(ounces);
     } catch (e) {
       Alert.alert('Couldn’t log that', e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function handleSetSupplementStatus(supplementId: number, status: SupplementDoseStatus) {
+    if (supplements.status !== 'ready') return;
+    try {
+      await supplements.setStatus(supplementId, status);
+    } catch (e) {
+      Alert.alert('Couldn’t update that', e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -180,6 +207,13 @@ function TodayContent({ timezone, hydrationGoalOz }: { timezone: string; hydrati
             {routine.next ? `Next: ${routine.next.label}` : 'All done for today 🎉'}
           </Text>
           <RoutineChecklist steps={routine.steps} onSetStatus={routine.setStepStatus} />
+        </View>
+      )}
+
+      {supplements.status === 'ready' && supplements.items.length > 0 && (
+        <View className="mt-4 gap-3">
+          <Text className="text-lg font-semibold text-neutral-900 dark:text-white">Supplements</Text>
+          <SupplementChecklist items={supplements.items} onSetStatus={handleSetSupplementStatus} />
         </View>
       )}
     </ScrollView>

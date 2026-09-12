@@ -19,7 +19,8 @@ Core MVP complete (Phases 0–9 of `docs/implementation-plan.md`). Summary of wh
 - **Data reset**: Settings > Data can wipe all on-device data for development/QA, which reactively drops the app back to onboarding.
 
 **Feature expansion in progress** (`docs/feature-expansion-plan.md`, Phases 10–19): supplements, a virtual pantry with overridable nutrition data, drag-and-drop meal planning, and a real backend for accountability-partner sharing.
-- **Phase 10 (supplements — core CRUD)** — done: `supplement`/`supplementDose` schema, a repo following the same query-builder/write-function split as every other entity, and a Settings > Supplements screen. No dose-tracking or Today integration yet — that's Phase 11.
+- **Phase 10 (supplements — core CRUD)** — done: `supplement`/`supplementDose` schema, a repo following the same query-builder/write-function split as every other entity, and a Settings > Supplements screen.
+- **Phase 11 (supplements — Today integration)** — done: a pure `computeSupplementUrgency`/`buildSupplementChecklist` domain layer (flags a `fasted` dose once eating starts, or a `specific_time` dose once it's overdue), `useTodaySupplements`, and a Supplements checklist card on Today with take/skip, wired through the same `onceGuard`/`ensureDailySnapshot` path every other write uses.
 
 **Known gaps, deliberately deferred beyond the original MVP pass** (see `docs/implementation-plan.md`'s Phase 9 addendum for the full reasoning):
 - No activity/exercise session logging (the `activityLog` table exists in the schema; workout *completion* is tracked via the habit-stack routine step, but duration/notes/distance aren't captured anywhere yet).
