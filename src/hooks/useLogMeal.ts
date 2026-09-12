@@ -10,6 +10,8 @@ export interface LogMealInput {
   calories: number;
   proteinG: number;
   sourcePresetId?: number;
+  sourceIngredientId?: number;
+  sourceStackId?: number;
   mealSlot?: string;
 }
 

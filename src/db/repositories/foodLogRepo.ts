@@ -17,6 +17,8 @@ export type LogFoodInput = {
   proteinG: number;
   mealSlot?: string | null;
   sourcePresetId?: number | null;
+  sourceIngredientId?: number | null;
+  sourceStackId?: number | null;
   yesterday: ResolvedDayType;
   today: ResolvedDayType;
 };
@@ -53,6 +55,8 @@ export async function logFood(input: LogFoodInput) {
       proteinG: input.proteinG,
       mealSlot: input.mealSlot ?? null,
       sourcePresetId: input.sourcePresetId ?? null,
+      sourceIngredientId: input.sourceIngredientId ?? null,
+      sourceStackId: input.sourceStackId ?? null,
       loggedOutsideWindow: !withinWindow,
     })
     .returning();

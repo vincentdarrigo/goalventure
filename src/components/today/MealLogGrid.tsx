@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite/query';
 import { Pressable, Text, View } from 'react-native';
 
+import { mealPresetIngredientItemsQuery } from '@/src/db/repositories/mealPresetIngredientRepo';
 import { type MealPresetRow, mealPresetsQuery } from '@/src/db/repositories/mealPresetRepo';
 import { mealStackItemsQuery, mealStacksQuery, type MealStackRow } from '@/src/db/repositories/mealStackRepo';
 import { computeStackTotals } from '@/src/domain/nutrition/mealStack';
@@ -27,7 +28,13 @@ function Card({
   );
 }
 
-function PresetCard({ preset, onLog }: { preset: MealPresetRow; onLog: (input: LogMealInput) => void }) {
+function FlatPresetCard({
+  preset,
+  onLog,
+}: {
+  preset: MealPresetRow;
+  onLog: (input: LogMealInput) => void;
+}) {
   return (
     <Card
       title={preset.name}
@@ -44,6 +51,34 @@ function PresetCard({ preset, onLog }: { preset: MealPresetRow; onLog: (input: L
   );
 }
 
+/** A composed preset's nutrition is always computed live from its current ingredients. */
+function ComposedPresetCard({
+  preset,
+  onLog,
+}: {
+  preset: MealPresetRow;
+  onLog: (input: LogMealInput) => void;
+}) {
+  const { data: items } = useLiveQuery(mealPresetIngredientItemsQuery(preset.id));
+  if (!items || items.length === 0) return null;
+
+  const totals = computeStackTotals(items);
+  return (
+    <Card
+      title={preset.name}
+      subtitle={`${Math.round(totals.calories)} kcal · ${Math.round(totals.proteinG * 10) / 10}g`}
+      onPress={() =>
+        onLog({
+          description: preset.name,
+          calories: totals.calories,
+          proteinG: totals.proteinG,
+          sourcePresetId: preset.id,
+        })
+      }
+    />
+  );
+}
+
 function StackCard({ stack, onLog }: { stack: MealStackRow; onLog: (input: LogMealInput) => void }) {
   const { data: items } = useLiveQuery(mealStackItemsQuery(stack.id));
   if (!items || items.length === 0) return null;
@@ -53,7 +88,14 @@ function StackCard({ stack, onLog }: { stack: MealStackRow; onLog: (input: LogMe
     <Card
       title={stack.name}
       subtitle={`${totals.calories} kcal · ${totals.proteinG}g`}
-      onPress={() => onLog({ description: stack.name, calories: totals.calories, proteinG: totals.proteinG })}
+      onPress={() =>
+        onLog({
+          description: stack.name,
+          calories: totals.calories,
+          proteinG: totals.proteinG,
+          sourceStackId: stack.id,
+        })
+      }
     />
   );
 }
@@ -73,9 +115,13 @@ export function MealLogGrid({ onLog }: { onLog: (input: LogMealInput) => void })
   return (
     <View className="flex-row flex-wrap gap-2">
       {stacks?.map((stack) => <StackCard key={`stack-${stack.id}`} stack={stack} onLog={onLog} />)}
-      {presets?.map((preset) => (
-        <PresetCard key={`preset-${preset.id}`} preset={preset} onLog={onLog} />
-      ))}
+      {presets?.map((preset) =>
+        preset.isComposed ? (
+          <ComposedPresetCard key={`preset-${preset.id}`} preset={preset} onLog={onLog} />
+        ) : (
+          <FlatPresetCard key={`preset-${preset.id}`} preset={preset} onLog={onLog} />
+        )
+      )}
     </View>
   );
 }

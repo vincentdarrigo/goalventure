@@ -30,6 +30,19 @@ export async function createMealPreset(input: MealPresetInput) {
   return rows[0];
 }
 
+/**
+ * A composed preset's flat calories/proteinG are placeholders (never read —
+ * live totals come from mealPresetIngredient instead). Mirrors
+ * createMealStack's "create now, populate items next" flow.
+ */
+export async function createComposedMealPreset(name: string) {
+  const rows = await db
+    .insert(mealPreset)
+    .values({ name, isComposed: true, calories: 0, proteinG: 0 })
+    .returning();
+  return rows[0];
+}
+
 export async function updateMealPreset(id: number, input: Partial<MealPresetInput>) {
   const rows = await db.update(mealPreset).set(input).where(eq(mealPreset.id, id)).returning();
   return rows[0];

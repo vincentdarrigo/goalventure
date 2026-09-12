@@ -86,6 +86,10 @@ export const routineCompletion = sqliteTable(
 export const mealPreset = sqliteTable('meal_preset', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
+  // When isComposed is true, these flat columns are ignored — totals come
+  // live from mealPresetIngredient instead, same philosophy as mealStack.
+  // Existing (and any new flat) presets are completely unaffected either way.
+  isComposed: integer('is_composed', { mode: 'boolean' }).notNull().default(false),
   calories: integer('calories').notNull(),
   proteinG: real('protein_g').notNull(),
   servingDescription: text('serving_description'),
@@ -112,6 +116,18 @@ export const ingredient = sqliteTable('ingredient', {
   archivedAt: text('archived_at'), // soft-delete: mealPresetIngredient/foodLog rows may reference this
 });
 
+export const mealPresetIngredient = sqliteTable('meal_preset_ingredient', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  mealPresetId: integer('meal_preset_id')
+    .notNull()
+    .references(() => mealPreset.id, { onDelete: 'cascade' }),
+  ingredientId: integer('ingredient_id')
+    .notNull()
+    .references(() => ingredient.id),
+  quantity: real('quantity').notNull().default(1), // multiplier against ingredient.servingSizeAmount
+  order: integer('order').notNull().default(0),
+});
+
 export const mealStack = sqliteTable('meal_stack', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
@@ -135,6 +151,14 @@ export const foodLog = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     dateTime: text('date_time').notNull(), // absolute UTC instant, ISO 8601
     sourcePresetId: integer('source_preset_id').references(() => mealPreset.id, {
+      onDelete: 'set null',
+    }),
+    // Provenance only, added alongside pantry/composed-preset support —
+    // calories/proteinG stay the snapshot source of truth regardless.
+    sourceIngredientId: integer('source_ingredient_id').references(() => ingredient.id, {
+      onDelete: 'set null',
+    }),
+    sourceStackId: integer('source_stack_id').references(() => mealStack.id, {
       onDelete: 'set null',
     }),
     description: text('description').notNull(),
