@@ -6,7 +6,10 @@ See `Health_Transformation_App_MVP_Claude_Code_Spec.docx` for the full product s
 
 ## Status
 
-MVP in progress. Phase 0 (project bootstrap) complete: Expo Router shell with four placeholder tabs (Today / Travel / History / Settings), TypeScript strict mode, NativeWind, ESLint, and Jest all wired and green. No persistence or domain logic yet.
+MVP in progress.
+
+- **Phase 0 (bootstrap)** — done: Expo Router shell, TypeScript strict mode, NativeWind, ESLint, Jest.
+- **Phase 1 (foundation)** — done: full Drizzle schema + first migration, on-device SQLite via `expo-sqlite`, a migration gate and profile gate in the root layout, Luxon date/time helpers (with DST-boundary tests), and an onboarding flow that writes a real `UserProfile` row. Settings screens to edit day types, schedule, and presets don't exist yet — Today/Travel/History tabs are still placeholders.
 
 ## Stack
 
@@ -32,7 +35,7 @@ npm run web
 
 ## Data & storage
 
-Not yet implemented. Once persistence lands (Drizzle over `expo-sqlite`), this section will document the on-device database file location, how to reset/seed demo data, and the migration workflow.
+SQLite on-device via `expo-sqlite`, database name `betterlife.db`, accessed through Drizzle ORM (`src/db/client.ts`). Schema lives in `src/db/schema.ts`; migrations are generated with `npx drizzle-kit generate` and committed under `src/db/migrations/`. The root layout runs pending migrations on launch and blocks navigation until they succeed. There's no reset/seed-demo-data UI yet — for now, uninstalling the app (or clearing app data) is the only way to start over.
 
 ## External services
 

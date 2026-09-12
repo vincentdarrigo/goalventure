@@ -144,7 +144,7 @@ export interface LocationDiscoveryProvider {
 Each phase is independently runnable/testable before moving on.
 
 1. **Bootstrap** — Expo TS template, Expo Router, strict tsconfig, ESLint/Prettier, NativeWind, Jest+jest-expo with one smoke test, `CLAUDE.md`/`README.md` skeletons. *Verify*: app boots, `npm test` passes, `tsc --noEmit` clean. — **DONE**
-2. **Foundation** — tab shell; full `schema.ts` + first migration; `db/migrate.ts` gate in root layout; `lib/datetime.ts`; `userProfileRepo` + onboarding writing a profile. *Verify*: Jest for datetime helpers; manual restart-persistence check.
+2. **Foundation** — tab shell; full `schema.ts` + first migration; `db/migrate.ts` gate in root layout; `lib/datetime.ts`; `userProfileRepo` + onboarding writing a profile. *Verify*: Jest for datetime helpers; manual restart-persistence check. — **DONE** (manual restart-persistence check still needs a human running the app on-device/simulator)
 3. **Day-type & schedule + resolver** — CRUD for `dayType`/`weeklySchedule`/`dateOverride`; `resolveDayType`/`fastingState`; Today's eating-window card wired live. *Verify*: exhaustive resolver/fasting-state Jest suite (override precedence, midnight-crossing, DST-pinned instants); manual live-update check.
 4. **Habit stack** — `routineStep`/`routineCompletion` repos + editor; `nextStep.ts`; checklist + next-action banner on Today. *Verify*: Jest for ordering/tie-breaks/all-done; manual per-date isolation check.
 5. **Meal presets & food logging** — preset/stack CRUD; `foodLogRepo.logFood` with snapshotting; `onceGuard` for duplicate taps; outside-window flagging; Today's meal grid + macro progress. *Verify*: Jest for macros + snapshot-independence + onceGuard; manual edit-preset-after-logging check.

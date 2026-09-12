@@ -4,7 +4,7 @@ module.exports = {
     {
       displayName: 'domain',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/src/domain/**/*.test.ts'],
+      testMatch: ['<rootDir>/src/domain/**/*.test.ts', '<rootDir>/src/lib/**/*.test.ts'],
       transform: {
         '^.+\\.tsx?$': ['babel-jest', { presets: ['babel-preset-expo'] }],
       },
