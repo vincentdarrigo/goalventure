@@ -2,31 +2,18 @@ import { DateTime } from 'luxon';
 
 import type { DayType, ResolvedDayType } from '@/src/domain/types';
 
+import { createDayType } from './dayTypeRepo';
 import { createMealPreset, updateMealPreset } from './mealPresetRepo';
 import { foodLogsInRangeQuery, logFood } from './foodLogRepo';
 import { resetTestDb } from '../testClient';
 
 const ZONE = 'America/Chicago';
 
-const GO_TO: DayType = {
-  id: 1,
-  name: 'Go-To 16/8',
-  eatingWindowStart: '08:00',
-  eatingWindowEnd: '16:00',
-  isFastDay: false,
-  calorieTarget: 2100,
-  proteinTarget: 200,
-};
-
-const FAST: DayType = {
-  id: 2,
-  name: '24-Hour Fast',
-  eatingWindowStart: null,
-  eatingWindowEnd: null,
-  isFastDay: true,
-  calorieTarget: 0,
-  proteinTarget: 0,
-};
+// dailyLogSnapshot.resolvedDayTypeId is a real FK, so tests need actual
+// dayType rows, not just synthetic domain objects — populated fresh in
+// beforeEach since resetTestDb() wipes every table between tests.
+let GO_TO: DayType;
+let FAST: DayType;
 
 function resolved(date: string, dayType: DayType): ResolvedDayType {
   return { date, dayType, source: 'schedule' };
@@ -37,8 +24,22 @@ function at(isoDate: string, hhmm: string): DateTime {
   return DateTime.fromISO(isoDate, { zone: ZONE }).set({ hour, minute });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   resetTestDb();
+  GO_TO = await createDayType({
+    name: 'Go-To 16/8',
+    eatingWindowStart: '08:00',
+    eatingWindowEnd: '16:00',
+    isFastDay: false,
+    calorieTarget: 2100,
+    proteinTarget: 200,
+  });
+  FAST = await createDayType({
+    name: '24-Hour Fast',
+    isFastDay: true,
+    calorieTarget: 0,
+    proteinTarget: 0,
+  });
 });
 
 describe('logFood — snapshot independence (edge case: editing a preset must not mutate historical logs)', () => {
@@ -74,9 +75,8 @@ describe('logFood — snapshot independence (edge case: editing a preset must no
 });
 
 describe('logFood — logging outside the eating window never rejects', () => {
-  const yesterday = resolved('2025-06-15', GO_TO);
-
   test('logging inside the window is flagged as within-window', async () => {
+    const yesterday = resolved('2025-06-15', GO_TO);
     const today = resolved('2025-06-16', GO_TO);
     const logged = await logFood({
       dateTime: at('2025-06-16', '12:00'),
@@ -90,6 +90,7 @@ describe('logFood — logging outside the eating window never rejects', () => {
   });
 
   test('logging before the window opens still succeeds, flagged as outside-window', async () => {
+    const yesterday = resolved('2025-06-15', GO_TO);
     const today = resolved('2025-06-16', GO_TO);
     const logged = await logFood({
       dateTime: at('2025-06-16', '05:00'),
@@ -103,6 +104,7 @@ describe('logFood — logging outside the eating window never rejects', () => {
   });
 
   test('logging on a hard fast day still succeeds, flagged as outside-window', async () => {
+    const yesterday = resolved('2025-06-15', GO_TO);
     const today = resolved('2025-06-16', FAST);
     const logged = await logFood({
       dateTime: at('2025-06-16', '12:00'),

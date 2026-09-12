@@ -5,6 +5,7 @@ import { db } from '@/src/db/client';
 import { isWithinAnyEatingWindow } from '@/src/domain/fasting/fastingState';
 import type { ResolvedDayType } from '@/src/domain/types';
 
+import { ensureDailySnapshot } from './dailyLogSnapshotRepo';
 import { foodLog } from '../schema';
 
 export type FoodLogRow = typeof foodLog.$inferSelect;
@@ -41,6 +42,7 @@ export async function logFood(input: LogFoodInput) {
   if (!isoInstant) {
     throw new Error('Invalid dateTime passed to logFood');
   }
+  await ensureDailySnapshot(input.today);
   const withinWindow = isWithinAnyEatingWindow(input.dateTime, input.yesterday, input.today);
   const rows = await db
     .insert(foodLog)

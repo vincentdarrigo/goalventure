@@ -6,6 +6,7 @@ import {
 } from '@/src/db/repositories/routineCompletionRepo';
 import { routineStepsByDayTypeQuery } from '@/src/db/repositories/routineStepRepo';
 import { nextStep, type RoutineStepStatus } from '@/src/domain/routine/nextStep';
+import type { ResolvedDayType } from '@/src/domain/types';
 
 export interface TodayRoutineStep {
   id: number;
@@ -25,10 +26,10 @@ export type UseTodayRoutineResult =
       setStepStatus: (stepId: number, status: RoutineStepStatus) => Promise<void>;
     };
 
-/** The habit-stack checklist for a specific day type on a specific date. */
-export function useTodayRoutine(dayTypeId: number, date: string): UseTodayRoutineResult {
-  const stepsQuery = useLiveQuery(routineStepsByDayTypeQuery(dayTypeId));
-  const completionsQuery = useLiveQuery(routineCompletionsByDateQuery(date));
+/** The habit-stack checklist for `resolved`'s day type and date. */
+export function useTodayRoutine(resolved: ResolvedDayType): UseTodayRoutineResult {
+  const stepsQuery = useLiveQuery(routineStepsByDayTypeQuery(resolved.dayType.id));
+  const completionsQuery = useLiveQuery(routineCompletionsByDateQuery(resolved.date));
 
   if (!stepsQuery.data || !completionsQuery.data) {
     return { status: 'loading' };
@@ -51,6 +52,6 @@ export function useTodayRoutine(dayTypeId: number, date: string): UseTodayRoutin
     status: 'ready',
     steps,
     next: nextStep(steps, statusByStepId),
-    setStepStatus: (stepId, status) => setRoutineStepStatus(date, stepId, status),
+    setStepStatus: (stepId, status) => setRoutineStepStatus(resolved.date, stepId, status, resolved),
   };
 }

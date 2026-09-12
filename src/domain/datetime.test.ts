@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 
-import { anchorTimeToDate, todayIsoInZone } from './datetime';
+import { anchorTimeToDate, enumerateDatesInRange, getWeekRange, todayIsoInZone } from './datetime';
 
 describe('anchorTimeToDate', () => {
   test('anchors an HH:mm time onto a calendar date in the given zone', () => {
@@ -55,5 +55,47 @@ describe('todayIsoInZone', () => {
 
   test('returns a YYYY-MM-DD string', () => {
     expect(todayIsoInZone('UTC')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('getWeekRange', () => {
+  test('a Wednesday resolves to that week’s Monday..Sunday', () => {
+    // 2025-06-18 is a Wednesday.
+    expect(getWeekRange('2025-06-18')).toEqual({ start: '2025-06-16', end: '2025-06-22' });
+  });
+
+  test('a Monday is itself the start of its week', () => {
+    expect(getWeekRange('2025-06-16')).toEqual({ start: '2025-06-16', end: '2025-06-22' });
+  });
+
+  test('a Sunday is itself the end of its week', () => {
+    expect(getWeekRange('2025-06-22')).toEqual({ start: '2025-06-16', end: '2025-06-22' });
+  });
+
+  test('a week spanning a month boundary resolves correctly', () => {
+    // 2025-06-30 is a Monday.
+    expect(getWeekRange('2025-07-01')).toEqual({ start: '2025-06-30', end: '2025-07-06' });
+  });
+});
+
+describe('enumerateDatesInRange', () => {
+  test('lists every date inclusive of both endpoints', () => {
+    expect(enumerateDatesInRange('2025-06-16', '2025-06-18')).toEqual([
+      '2025-06-16',
+      '2025-06-17',
+      '2025-06-18',
+    ]);
+  });
+
+  test('a single-day range returns just that date', () => {
+    expect(enumerateDatesInRange('2025-06-16', '2025-06-16')).toEqual(['2025-06-16']);
+  });
+
+  test('spans a month boundary correctly', () => {
+    expect(enumerateDatesInRange('2025-06-29', '2025-07-01')).toEqual([
+      '2025-06-29',
+      '2025-06-30',
+      '2025-07-01',
+    ]);
   });
 });

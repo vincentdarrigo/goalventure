@@ -3,6 +3,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { MealLogGrid } from '@/src/components/today/MealLogGrid';
 import { RoutineChecklist } from '@/src/components/today/RoutineChecklist';
+import { WeeklyBudgetCard } from '@/src/components/today/WeeklyBudgetCard';
 import { todayIsoInZone } from '@/src/domain/datetime';
 import type { DayType, ResolvedDayType } from '@/src/domain/types';
 import { useFastingState } from '@/src/hooks/useFastingState';
@@ -10,6 +11,7 @@ import { type LogMealInput, useLogMeal } from '@/src/hooks/useLogMeal';
 import { useTodayMacros } from '@/src/hooks/useTodayMacros';
 import { useTodayRoutine } from '@/src/hooks/useTodayRoutine';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
+import { useWeeklyBudget } from '@/src/hooks/useWeeklyBudget';
 import { formatDuration } from '@/src/lib/formatDuration';
 
 function Centered({ children }: { children: React.ReactNode }) {
@@ -58,8 +60,9 @@ function TodayContent({ timezone }: { timezone: string }) {
   const yesterday = result.status === 'ready' ? result.yesterday : placeholderResolved(fallbackDate);
   const today = result.status === 'ready' ? result.today : placeholderResolved(fallbackDate);
 
-  const routine = useTodayRoutine(today.dayType.id, today.date);
+  const routine = useTodayRoutine(today);
   const macros = useTodayMacros(today, timezone);
+  const weeklyBudget = useWeeklyBudget(today.date, timezone);
   const logMeal = useLogMeal(yesterday, today, timezone);
 
   async function handleLog(input: LogMealInput) {
@@ -150,6 +153,8 @@ function TodayContent({ timezone }: { timezone: string }) {
           </View>
         </View>
       )}
+
+      {weeklyBudget && <WeeklyBudgetCard budget={weeklyBudget} />}
 
       <View className="mt-2 gap-3">
         <Text className="text-lg font-semibold text-neutral-900 dark:text-white">Log a meal</Text>

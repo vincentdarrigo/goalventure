@@ -1,8 +1,11 @@
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/src/db/client';
+import type { RoutineStepStatus } from '@/src/domain/routine/nextStep';
+import type { ResolvedDayType } from '@/src/domain/types';
+
+import { ensureDailySnapshot } from './dailyLogSnapshotRepo';
 import { routineCompletion } from '../schema';
-import type { RoutineStepStatus } from '../../domain/routine/nextStep';
 
 export type RoutineCompletionRow = typeof routineCompletion.$inferSelect;
 
@@ -14,8 +17,10 @@ export function routineCompletionsByDateQuery(date: string) {
 export async function setRoutineStepStatus(
   date: string,
   routineStepId: number,
-  status: RoutineStepStatus
+  status: RoutineStepStatus,
+  resolvedToday: ResolvedDayType
 ) {
+  await ensureDailySnapshot(resolvedToday);
   const completedAt = status === 'completed' ? new Date().toISOString() : null;
   await db
     .insert(routineCompletion)
