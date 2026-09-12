@@ -29,6 +29,13 @@
       "when": 1789223924584,
       "tag": "0003_rainy_anthem",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789224281230,
+      "tag": "0004_glossy_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

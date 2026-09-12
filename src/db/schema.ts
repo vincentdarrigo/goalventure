@@ -175,6 +175,33 @@ export const foodLog = sqliteTable(
   (t) => [index('food_log_date_time_idx').on(t.dateTime)]
 );
 
+export const mealSlot = sqliteTable('meal_slot', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(), // "Breakfast" etc. — seeded as editable DATA, never a hardcoded constant
+  order: integer('order').notNull().default(0),
+  archivedAt: text('archived_at'),
+});
+
+export const mealPlanEntry = sqliteTable('meal_plan_entry', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  date: text('date').notNull(),
+  mealSlotId: integer('meal_slot_id')
+    .notNull()
+    .references(() => mealSlot.id),
+  // Exactly one of the three below is set — enforced by the repo write
+  // function's TS discriminated union input type, not a SQL CHECK constraint
+  // (no existing precedent for those in this schema).
+  ingredientId: integer('ingredient_id').references(() => ingredient.id),
+  mealPresetId: integer('meal_preset_id').references(() => mealPreset.id),
+  mealStackId: integer('meal_stack_id').references(() => mealStack.id),
+  quantity: real('quantity').notNull().default(1),
+  order: integer('order').notNull().default(0),
+  // Set once this planned entry has been converted into a real FoodLog —
+  // nutrition for a plan entry is always computed live until then, since a
+  // plan is provisional/editable, never a historical record on its own.
+  loggedFoodLogId: integer('logged_food_log_id').references(() => foodLog.id),
+});
+
 export const hydrationLog = sqliteTable(
   'hydration_log',
   {
