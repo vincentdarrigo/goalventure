@@ -17,6 +17,16 @@ export default function SettingsScreen() {
         subtitle="One-off swaps for travel, holidays, illness"
         onPress={() => router.push('/settings/overrides')}
       />
+      <ListRow
+        title="Meal Presets"
+        subtitle="Reusable meals for one-tap logging"
+        onPress={() => router.push('/settings/meal-presets')}
+      />
+      <ListRow
+        title="Meal Stacks"
+        subtitle="Bundle presets into one combined log"
+        onPress={() => router.push('/settings/meal-stacks')}
+      />
     </ScrollView>
   );
 }

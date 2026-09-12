@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 
 import type { DayType, ResolvedDayType } from '../types';
-import { computeFastingState, isWithinEatingWindow } from './fastingState';
+import { computeFastingState, isWithinAnyEatingWindow, isWithinEatingWindow } from './fastingState';
 
 const ZONE = 'America/Chicago';
 
@@ -207,5 +207,21 @@ describe('isWithinEatingWindow', () => {
     expect(isWithinEatingWindow(at('2025-06-16', '23:30'), day)).toBe(true);
     expect(isWithinEatingWindow(at('2025-06-17', '02:00'), day)).toBe(true);
     expect(isWithinEatingWindow(at('2025-06-17', '05:00'), day)).toBe(false);
+  });
+});
+
+describe('isWithinAnyEatingWindow', () => {
+  test('logging food at 2am is flagged as within-window, because yesterday’s window carried over', () => {
+    const yesterday = resolved('2025-06-16', CROSSING); // 20:00 -> 04:00 next day
+    const today = resolved('2025-06-17', FAST); // today's own DayType is unrelated
+
+    expect(isWithinAnyEatingWindow(at('2025-06-17', '02:00'), yesterday, today)).toBe(true);
+  });
+
+  test('is false when neither yesterday nor today has an open window at that instant', () => {
+    const yesterday = resolved('2025-06-16', CROSSING);
+    const today = resolved('2025-06-17', FAST);
+
+    expect(isWithinAnyEatingWindow(at('2025-06-17', '10:00'), yesterday, today)).toBe(false);
   });
 });

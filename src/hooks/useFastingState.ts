@@ -10,7 +10,12 @@ import { useDayTypeContext } from './useDayTypeContext';
 export type UseFastingStateResult =
   | { status: 'loading' }
   | { status: 'error'; error: Error }
-  | { status: 'ready'; fastingState: FastingState; today: ResolvedDayType };
+  | {
+      status: 'ready';
+      fastingState: FastingState;
+      yesterday: ResolvedDayType;
+      today: ResolvedDayType;
+    };
 
 /** Recomputes the fasting state on this interval, so an on-screen countdown stays live. */
 const REFRESH_INTERVAL_MS = 60_000;
@@ -40,7 +45,12 @@ export function useFastingState(zone: string): UseFastingStateResult {
     const today = resolveDayType(todayIso, context.weeklySchedule, context.overrides, context.dayTypesById);
     const tomorrow = resolveDayType(tomorrowIso, context.weeklySchedule, context.overrides, context.dayTypesById);
 
-    return { status: 'ready', fastingState: computeFastingState(now, yesterday, today, tomorrow), today };
+    return {
+      status: 'ready',
+      fastingState: computeFastingState(now, yesterday, today, tomorrow),
+      yesterday,
+      today,
+    };
   } catch (e) {
     return { status: 'error', error: e instanceof Error ? e : new Error(String(e)) };
   }

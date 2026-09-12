@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 
-import { db } from '../client';
+import { db } from '@/src/db/client';
 import { userProfile } from '../schema';
 
 export type UserProfileRow = typeof userProfile.$inferSelect;

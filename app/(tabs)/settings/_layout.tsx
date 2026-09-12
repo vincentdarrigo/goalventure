@@ -11,6 +11,10 @@ export default function SettingsLayout() {
       <Stack.Screen name="weekly-schedule/[weekday]" options={{ title: 'Choose Day Type' }} />
       <Stack.Screen name="overrides/index" options={{ title: 'Date Overrides' }} />
       <Stack.Screen name="overrides/new" options={{ title: 'New Override', presentation: 'modal' }} />
+      <Stack.Screen name="meal-presets/index" options={{ title: 'Meal Presets' }} />
+      <Stack.Screen name="meal-presets/[id]" options={{ title: 'Meal Preset' }} />
+      <Stack.Screen name="meal-stacks/index" options={{ title: 'Meal Stacks' }} />
+      <Stack.Screen name="meal-stacks/[id]/index" options={{ title: 'Meal Stack' }} />
     </Stack>
   );
 }

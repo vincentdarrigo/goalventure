@@ -123,15 +123,24 @@ export function computeFastingState(
   };
 }
 
-/**
- * Whether `at` falls inside `resolved`'s own eating window. This only checks
- * `resolved`'s window; like `computeFastingState`, a caller working near
- * midnight (e.g. logging food) should also check the previous day's resolved
- * DayType in case its window crosses into today — see Phase 5's foodLogRepo.
- */
+/** Whether `at` falls inside `resolved`'s own eating window (ignores any carry-over from the previous day). */
 export function isWithinEatingWindow(at: DateTime, resolved: ResolvedDayType): boolean {
   const classification = classifyDay(resolved, at.zone.name);
   if (classification.kind === 'fasting') return false;
   if (classification.kind === 'flexible') return true;
   return isWithin(at, classification.bounds);
+}
+
+/**
+ * Whether `at` falls inside either today's window or a midnight-crossing
+ * window carried over from yesterday. Use this (not `isWithinEatingWindow`
+ * alone) whenever the check might land in the early hours of a day, e.g.
+ * flagging a food log as inside/outside the eating window.
+ */
+export function isWithinAnyEatingWindow(
+  at: DateTime,
+  yesterday: ResolvedDayType,
+  today: ResolvedDayType
+): boolean {
+  return isWithinEatingWindow(at, yesterday) || isWithinEatingWindow(at, today);
 }

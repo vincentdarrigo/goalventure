@@ -2,11 +2,22 @@
 module.exports = {
   projects: [
     {
-      displayName: 'domain',
+      displayName: 'node',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/src/domain/**/*.test.ts', '<rootDir>/src/lib/**/*.test.ts'],
+      testMatch: [
+        '<rootDir>/src/domain/**/*.test.ts',
+        '<rootDir>/src/lib/**/*.test.ts',
+        '<rootDir>/src/db/**/*.test.ts',
+      ],
       transform: {
         '^.+\\.tsx?$': ['babel-jest', { presets: ['babel-preset-expo'] }],
+      },
+      // Repository tests run against an in-memory better-sqlite3 database
+      // (see src/db/testClient.ts) instead of the real expo-sqlite client,
+      // which has no native binding available under plain Node/Jest.
+      moduleNameMapper: {
+        '^@/src/db/client$': '<rootDir>/src/db/testClient.ts',
+        '^@/(.*)$': '<rootDir>/$1',
       },
     },
     {

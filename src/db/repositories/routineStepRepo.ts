@@ -1,6 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 
-import { db } from '../client';
+import { db } from '@/src/db/client';
 import { routineStep } from '../schema';
 
 export type RoutineStepRow = typeof routineStep.$inferSelect;

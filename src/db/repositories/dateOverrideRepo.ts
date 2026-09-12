@@ -1,6 +1,6 @@
 import { desc, eq } from 'drizzle-orm';
 
-import { db } from '../client';
+import { db } from '@/src/db/client';
 import { dateOverride } from '../schema';
 
 export type DateOverrideRow = typeof dateOverride.$inferSelect;

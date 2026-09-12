@@ -1,6 +1,6 @@
 import { asc, eq, isNull } from 'drizzle-orm';
 
-import { db } from '../client';
+import { db } from '@/src/db/client';
 import { dayType } from '../schema';
 
 export type DayTypeRow = typeof dayType.$inferSelect;

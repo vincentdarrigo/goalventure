@@ -1,4 +1,4 @@
-import { db } from '../client';
+import { db } from '@/src/db/client';
 import { weeklySchedule } from '../schema';
 
 export type WeeklyScheduleRow = typeof weeklySchedule.$inferSelect;

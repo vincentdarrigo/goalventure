@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 
-import { db } from '../client';
+import { db } from '@/src/db/client';
 import { routineCompletion } from '../schema';
 import type { RoutineStepStatus } from '../../domain/routine/nextStep';
 

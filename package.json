@@ -30,10 +30,12 @@
   },
   "devDependencies": {
     "@testing-library/react-native": "^14.0.1",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/jest": "^30.0.0",
     "@types/luxon": "^3.7.5",
     "@types/react": "~19.2.2",
     "babel-plugin-inline-import": "^3.0.0",
+    "better-sqlite3": "^13.0.3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
