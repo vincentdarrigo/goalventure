@@ -1,4 +1,4 @@
-# BetterLife — Agent Instructions
+# Goalventure — Agent Instructions
 
 Read `Health_Transformation_App_MVP_Claude_Code_Spec.docx` before making product/behavior decisions — it is the product source of truth. This file covers engineering conventions.
 

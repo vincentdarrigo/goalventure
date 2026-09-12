@@ -1,4 +1,4 @@
-# BetterLife — Feature Expansion: Supplements, Pantry, Meal Planning, Accountability Partner
+# Goalventure — Feature Expansion: Supplements, Pantry, Meal Planning, Accountability Partner
 
 ## Context
 
@@ -65,6 +65,8 @@ Minimal endpoint surface: `POST /accounts` (lazy creation), `POST /device-link-c
     > ESLint required its own setup (none existed for `backend/` yet): a plain `typescript-eslint` flat config. Backend's `typescript` devDependency is pinned to `~6.0.3` (matching the mobile app's own pin) rather than left on `^7.x` — `npm install` had resolved TypeScript 7 by default, which `typescript-eslint`'s current release doesn't yet support as a peer (capped at `<6.1.0`); rather than force an unsupported combination, pinned back to a version both tools handle correctly.
     >
     > **Blocked, needs the user:** no GitHub remote exists for this repo yet, and Render's `create_web_service` requires a cloneable git URL — the user is creating a repo and will provide the URL. Render Postgres (`betterlife-db`, free plan, expires 2026-10-12 — needs a paid-plan upgrade before then) is already provisioned, but its connection string isn't retrievable through the available Render tools (only a read-only query tool exists, not a credentials/connection-string lookup) — once the web service exists, `DATABASE_URL` should be wired via Render's own database-to-service env var linking on the dashboard (or in a future `render.yaml`) rather than a value I paste in by hand, and `npm run db:migrate` run from there (or as part of the deploy's start command) rather than from this environment.
+    >
+    > **Repo/product renamed to Goalventure** after this phase shipped — every in-repo reference (`app.json`, `package.json` names/slug/scheme, on-device DB filename, docs titles) was updated, but the Render Postgres instance itself is still literally named `betterlife-db`: no rename tool exists among the available Render MCP tools (only create/get/list/query), so it stays as-is — cosmetic only, doesn't affect connectivity — until renamed by hand in the dashboard if desired.
 18. **Accountability — configurable check-ins + summary push.** `check_in_item` CRUD, `daily_summary` upsert, manual push action. — **API DONE, manual-push in-app action pending**
 
     > **Addendum:** `check_in_item.key`/`valueType` are immutable after creation (only `label`/`order` can be edited via `PATCH`) — the key is what a `daily_summary.payload` is written under, so letting it change would silently orphan historical data; `valueType` is likewise fixed so an existing key's recorded values can't change shape underneath already-submitted history. Removing an item archives it (`archivedAt`, same convention as the mobile app's soft-deletable entities) rather than deleting it, so past summaries that reference the key stay interpretable. `key` is constrained to `^[a-z][a-z0-9_]*$` since it's a literal JSON object key round-tripped through `payload`.

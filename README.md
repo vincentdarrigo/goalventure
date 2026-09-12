@@ -1,4 +1,4 @@
-# BetterLife
+# Goalventure
 
 A local-first, configurable fitness/habit-tracking mobile app: eating-window/fasting state, daily habit stacking, meal/calorie/protein logging, hydration tracking, weekly budget rollups, and a Travel/Wildcard mode for travel days.
 
@@ -71,7 +71,7 @@ Jest runs as two projects (see `jest.config.js`):
 
 ## Data & storage
 
-SQLite on-device via `expo-sqlite`, database name `betterlife.db`, accessed through Drizzle ORM (`src/db/client.ts`). Data lives in the app's sandboxed storage (standard iOS/Android app-data location managed by `expo-sqlite` — not user-accessible without a debug build/simulator file browser), so it is local-only, single-device, and not included in this MVP's scope for cloud backup. Schema lives in `src/db/schema.ts`; migrations are generated with `npx drizzle-kit generate` and committed under `src/db/migrations/`. The root layout runs pending migrations on launch and blocks navigation until they succeed.
+SQLite on-device via `expo-sqlite`, database name `goalventure.db`, accessed through Drizzle ORM (`src/db/client.ts`). Data lives in the app's sandboxed storage (standard iOS/Android app-data location managed by `expo-sqlite` — not user-accessible without a debug build/simulator file browser), so it is local-only, single-device, and not included in this MVP's scope for cloud backup. Schema lives in `src/db/schema.ts`; migrations are generated with `npx drizzle-kit generate` and committed under `src/db/migrations/`. The root layout runs pending migrations on launch and blocks navigation until they succeed.
 
 To start over during development or QA, use **Settings > Data > Reset all data** (`src/db/reset.ts`) — it clears every table and the app reactively drops back to onboarding, no reinstall needed. There is no "load a demo profile" seed flow; onboarding only supports entering a real profile by hand (see Status above).
 

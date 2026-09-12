@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "BetterLife",
-    "slug": "betterlife",
+    "name": "Goalventure",
+    "slug": "goalventure",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "betterlife",
+    "scheme": "goalventure",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true

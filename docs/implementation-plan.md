@@ -1,4 +1,4 @@
-# BetterLife — Health Transformation App MVP
+# Goalventure — Health Transformation App MVP
 
 ## Context
 
@@ -24,7 +24,7 @@ The project folder is currently empty except for the spec file. This plan define
 ## Project Structure
 
 ```
-BetterLife/
+Goalventure/
   app/                              # Expo Router screens only — no business logic
     _layout.tsx                     # DB open+migrate gate, QueryClientProvider, SafeAreaProvider
     (tabs)/

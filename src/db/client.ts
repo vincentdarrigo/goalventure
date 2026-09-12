@@ -3,7 +3,7 @@ import { openDatabaseSync } from 'expo-sqlite';
 
 import * as schema from './schema';
 
-export const DATABASE_NAME = 'betterlife.db';
+export const DATABASE_NAME = 'goalventure.db';
 
 export const expoDb = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
 
