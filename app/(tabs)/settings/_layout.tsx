@@ -4,6 +4,7 @@ export default function SettingsLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ title: 'Settings' }} />
+      <Stack.Screen name="profile" options={{ title: 'Profile' }} />
       <Stack.Screen name="day-types/index" options={{ title: 'Day Types' }} />
       <Stack.Screen name="day-types/[id]/index" options={{ title: 'Day Type' }} />
       <Stack.Screen name="day-types/[id]/routine" options={{ title: 'Routine Steps' }} />
@@ -21,6 +22,10 @@ export default function SettingsLayout() {
       <Stack.Screen name="pantry/index" options={{ title: 'Pantry' }} />
       <Stack.Screen name="pantry/[id]" options={{ title: 'Ingredient' }} />
       <Stack.Screen name="pantry/search" options={{ title: 'Search Foods', presentation: 'modal' }} />
+      <Stack.Screen name="accountability/index" options={{ title: 'Accountability' }} />
+      <Stack.Screen name="accountability/check-in-items/index" options={{ title: 'Check-In Items' }} />
+      <Stack.Screen name="accountability/check-in-items/[id]" options={{ title: 'Check-In Item' }} />
+      <Stack.Screen name="accountability/send-checkin" options={{ title: "Today's Check-In" }} />
     </Stack>
   );
 }

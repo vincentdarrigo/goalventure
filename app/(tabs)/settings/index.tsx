@@ -6,6 +6,11 @@ import { ListRow } from '@/src/components/settings/ListRow';
 export default function SettingsScreen() {
   return (
     <ScrollView className="flex-1 bg-white dark:bg-neutral-950">
+      <ListRow
+        title="Profile"
+        subtitle="Weight goals, hydration, alcohol rule, health focus"
+        onPress={() => router.push('/settings/profile')}
+      />
       <ListRow title="Day Types" subtitle="Eating windows, targets" onPress={() => router.push('/settings/day-types')} />
       <ListRow
         title="Weekly Schedule"
@@ -36,6 +41,11 @@ export default function SettingsScreen() {
         title="Pantry"
         subtitle="Ingredients with real nutrition data"
         onPress={() => router.push('/settings/pantry')}
+      />
+      <ListRow
+        title="Accountability"
+        subtitle="Pair with a partner, configure check-ins"
+        onPress={() => router.push('/settings/accountability')}
       />
       <ListRow
         title="Data"

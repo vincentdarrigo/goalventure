@@ -47,7 +47,7 @@ describe('pairings', () => {
       headers: { authorization: owner.authHeader },
     });
     expect(ownerView.json()).toMatchObject({
-      asTrackedUser: [{ partnerAccountId: partner.accountId }],
+      asTrackedUser: [{ partnerAccountId: partner.accountId, partnerDisplayName: 'Partner' }],
       asPartner: [],
     });
 

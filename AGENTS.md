@@ -8,7 +8,7 @@ A local-first, configurable fitness/habit-tracking mobile app (Expo/React Native
 
 ## Stack
 
-Expo + TypeScript (strict) + Expo Router (file-based routing) + Drizzle ORM over `expo-sqlite` (real, committed migrations via drizzle-kit) + Luxon (all date/time math) + Zustand (ephemeral UI state only — nothing has needed it yet; all state so far is either DB-backed live queries or local component state) + NativeWind (Tailwind for RN) + TanStack Query (external service-adapter calls only, not local DB reads) + Jest/`jest-expo` + React Native Testing Library.
+Expo + TypeScript (strict) + Expo Router (file-based routing) + Drizzle ORM over `expo-sqlite` (real, committed migrations via drizzle-kit) + Luxon (all date/time math) + Zustand (ephemeral, cross-screen UI state — most state is still DB-backed live queries or local component state; the one real exception is `src/stores/accountabilityCredentialStore.ts`, a bearer credential shared across several Settings screens) + NativeWind (Tailwind for RN) + TanStack Query (external service-adapter calls only, not local DB reads) + Jest/`jest-expo` + React Native Testing Library.
 
 ## Structure & conventions
 
@@ -19,7 +19,7 @@ Expo + TypeScript (strict) + Expo Router (file-based routing) + Drizzle ORM over
 - `src/hooks/` — glue: compose `domain` + repositories into React (live-query wrappers, `useFastingState`, etc.). Hooks call repositories, never `db`/`schema` directly.
 - `src/stores/`, `src/components/`, `src/lib/` — UI-state, presentational components, shared utilities.
 - **Tests colocated inside `app/` must live in an `__tests__/` subfolder** (e.g. `app/(tabs)/__tests__/index.test.tsx`), not as a sibling `*.test.tsx` file — Expo Router treats any other file under `app/` as a route, and a `.test.tsx` file left as a direct sibling gets exported as a real route.
-- Full architecture, schema, and phased build plan (including per-phase addenda on deviations and gotchas): `docs/implementation-plan.md` (original 9-phase MVP, complete) and `docs/feature-expansion-plan.md` (supplements, pantry, meal planning, accountability-partner backend — in progress).
+- Full architecture, schema, and phased build plan (including per-phase addenda on deviations and gotchas): `docs/implementation-plan.md` (original 9-phase MVP, complete) and `docs/feature-expansion-plan.md` (supplements, pantry, meal planning, accountability-partner backend — Phases 10-20 complete).
 
 ## Testing
 

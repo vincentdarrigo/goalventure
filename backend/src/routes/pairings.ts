@@ -1,6 +1,7 @@
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import type { FastifyInstance } from 'fastify';
 import { eq, or } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 import { account, partnership } from '../db/schema.js';
@@ -68,24 +69,36 @@ export function registerPairingRoutes<TQueryResult extends PgQueryResultHKT>(
     const auth = await requireAccount(db, request, reply);
     if (!auth) return;
 
+    const partnerAccount = alias(account, 'partner_account');
+
     const rows = await db
       .select({
         partnershipId: partnership.id,
         accountId: partnership.accountId,
         partnerAccountId: partnership.partnerAccountId,
-        accountDisplayName: account.displayName,
+        trackedDisplayName: account.displayName,
+        partnerDisplayName: partnerAccount.displayName,
       })
       .from(partnership)
       .innerJoin(account, eq(account.id, partnership.accountId))
+      .innerJoin(partnerAccount, eq(partnerAccount.id, partnership.partnerAccountId))
       .where(or(eq(partnership.accountId, auth.accountId), eq(partnership.partnerAccountId, auth.accountId)));
 
     const asTrackedUser = rows
       .filter((r) => r.accountId === auth.accountId)
-      .map((r) => ({ partnershipId: r.partnershipId, partnerAccountId: r.partnerAccountId }));
+      .map((r) => ({
+        partnershipId: r.partnershipId,
+        partnerAccountId: r.partnerAccountId,
+        partnerDisplayName: r.partnerDisplayName,
+      }));
 
     const asPartner = rows
       .filter((r) => r.partnerAccountId === auth.accountId)
-      .map((r) => ({ partnershipId: r.partnershipId, trackedAccountId: r.accountId, trackedDisplayName: r.accountDisplayName }));
+      .map((r) => ({
+        partnershipId: r.partnershipId,
+        trackedAccountId: r.accountId,
+        trackedDisplayName: r.trackedDisplayName,
+      }));
 
     return reply.status(200).send({ asTrackedUser, asPartner });
   });

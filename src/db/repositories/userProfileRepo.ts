@@ -10,6 +10,9 @@ export type UserProfileInput = {
   currentWeight?: number | null;
   targetWeight?: number | null;
   hydrationGoalOz: number;
+  alcoholRule?: string | null;
+  healthFocus?: string | null;
+  palateNotes?: string | null;
   units: 'imperial' | 'metric';
 };
 

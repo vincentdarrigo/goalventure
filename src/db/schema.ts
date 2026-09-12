@@ -8,6 +8,8 @@ export const userProfile = sqliteTable('user_profile', {
   targetWeight: real('target_weight'),
   hydrationGoalOz: real('hydration_goal_oz').notNull().default(100),
   alcoholRule: text('alcohol_rule'),
+  healthFocus: text('health_focus'), // free text, e.g. "shoulder/back stability, vascular recovery"
+  palateNotes: text('palate_notes'), // free text, e.g. "simple/repeatable: chicken, beef, potatoes"
   units: text('units', { enum: ['imperial', 'metric'] })
     .notNull()
     .default('imperial'),
