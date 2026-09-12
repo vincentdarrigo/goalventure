@@ -50,7 +50,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --forceExit",
     "typecheck": "tsc --noEmit"
   },
   "private": true,

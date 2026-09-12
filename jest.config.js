@@ -28,6 +28,13 @@ module.exports = {
         '<rootDir>/components/**/*.test.{ts,tsx}',
         '<rootDir>/src/**/*.test.tsx',
       ],
+      // Same in-memory-SQLite swap as the "node" project (see above) — lets
+      // component tests render real DB-backed screens. better-sqlite3 is a
+      // plain Node native module and runs fine under jest-expo's Node process.
+      moduleNameMapper: {
+        '^@/src/db/client$': '<rootDir>/src/db/testClient.ts',
+        '^@/(.*)$': '<rootDir>/$1',
+      },
     },
   ],
 };
