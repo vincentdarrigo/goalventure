@@ -27,6 +27,11 @@ export default function SettingsScreen() {
         subtitle="Bundle presets into one combined log"
         onPress={() => router.push('/settings/meal-stacks')}
       />
+      <ListRow
+        title="Data"
+        subtitle="Reset all data (development/QA)"
+        onPress={() => router.push('/settings/data')}
+      />
     </ScrollView>
   );
 }

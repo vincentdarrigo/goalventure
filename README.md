@@ -6,16 +6,24 @@ See `Health_Transformation_App_MVP_Claude_Code_Spec.docx` for the full product s
 
 ## Status
 
-MVP in progress.
+Core MVP complete (Phases 0–9 of `docs/implementation-plan.md`). Summary of what's built:
 
-- **Phase 0 (bootstrap)** — done: Expo Router shell, TypeScript strict mode, NativeWind, ESLint, Jest.
-- **Phase 1 (foundation)** — done: full Drizzle schema + first migration, on-device SQLite via `expo-sqlite`, a migration gate and profile gate in the root layout, Luxon date/time helpers (with DST-boundary tests), and an onboarding flow that writes a real `UserProfile` row.
-- **Phase 2 (day types & schedule)** — done: CRUD for day types, the weekly schedule, and date overrides (Settings tab); a pure `resolveDayType`/`computeFastingState` domain layer (DST- and midnight-crossing-safe, with a "flexible/unrestricted" day kind alongside timed windows and hard fasts); the Today tab now shows the live eating-window/fasting state instead of a placeholder.
-- **Phase 3 (habit stack)** — done: routine-step CRUD nested under each day type in Settings, a pure `nextStep` resolver (skipped steps don't block progress, snoozed ones still count as outstanding), and a live checklist + "next action" banner on the Today tab.
-- **Phase 4 (meal logging)** — done: meal preset and meal stack CRUD (Settings), one-tap logging from the Today tab with duplicate-tap protection (`onceGuard`), live calorie/protein progress, and off-window logging that flags rather than rejects. FoodLog rows snapshot their nutrition values at write time — editing or deleting a preset later never changes history (covered by a real SQLite integration test, not just a pure-function one; see "Testing" below).
-- **Phase 6 (target snapshots & weekly budget)** — done: `dailyLogSnapshot` freezes a day's resolved targets the first time any activity (a meal or a routine-step completion) is logged for that date, so a later DayType/schedule edit never retroactively changes an already-touched day — verified with a real mid-week-target-change integration test. The Today tab now shows a live "This week" calorie budget card (snapshot-first, live `resolveDayType` for untouched days).
-- **Phase 7 (hydration)** — done: quick-add (8/16/24 oz) plus a custom amount, tracked against the profile's daily goal, never clamped even past 100%.
-- **Phase 8 (Travel/Wildcard)** — done: a mockable `LocationDiscoveryProvider` adapter (nearby high-protein food and movement destinations, no API key required), a one-day Wildcard override control that never touches the recurring weekly schedule, and a manual "I ate this" fallback that's verified — by a real component test forcing the discovery adapter to fail — to keep working even when discovery is down. This also extended the DB integration-test harness to component tests: `useLiveQuery`'s reactivity depends on `expo-sqlite`'s native change-listener API directly, independent of the `better-sqlite3` swap, so there's now a manual Jest mock for it too (see "Testing"). Activity logging, weight logging, and full History browsing are still unbuilt.
+- **Foundation**: Expo Router shell, TypeScript strict mode, NativeWind, ESLint, Jest; full Drizzle schema + committed migrations over on-device SQLite (`expo-sqlite`); a migration gate + profile gate in the root layout; onboarding that writes a real `UserProfile` (no hard-coded personal values anywhere).
+- **Scheduling & fasting**: day types, the weekly schedule, and one-off date overrides (Settings), resolved by a pure `resolveDayType`/`computeFastingState` domain layer — DST-safe, midnight-crossing-safe, with a "flexible/unrestricted" day kind (Travel/Wildcard, Game Day) alongside timed windows and hard fasts. The Today tab shows the live eating/fasting state and countdown.
+- **Habit stack**: routine steps per day type, a pure `nextStep` resolver (skips don't block progress), a live checklist + "next action" banner on Today.
+- **Meal logging**: meal preset and meal stack CRUD, one-tap logging with duplicate-tap protection (`onceGuard`), live calorie/protein progress, off-window logging that flags rather than rejects. FoodLog rows snapshot nutrition at write time — editing/deleting a preset never rewrites history.
+- **Weekly budget**: `dailyLogSnapshot` freezes a day's resolved targets the first time any activity is logged for that date, so a later DayType/schedule edit never retroactively changes an already-touched day. The Today tab shows a live "This week" calorie budget card.
+- **Hydration**: quick-add (8/16/24 oz) plus a custom amount, never clamped past 100% of goal.
+- **Travel/Wildcard**: a mockable `LocationDiscoveryProvider` adapter (no API key required), a one-day override control that never touches the recurring weekly schedule, and a manual "I ate this" fallback verified — by a real component test forcing the discovery adapter to fail — to keep working when discovery is down.
+- **History & weight**: a 14-day rolling list plus a day-detail view to review and delete meal/hydration entries (aggregates recalculate live) and log/delete a same-day weight entry; an explicit empty state for a zero-log date.
+- **Data reset**: Settings > Data can wipe all on-device data for development/QA, which reactively drops the app back to onboarding.
+
+**Known gaps, deliberately deferred beyond this MVP pass** (see `docs/implementation-plan.md`'s Phase 9 addendum for the full reasoning):
+- No activity/exercise session logging (the `activityLog` table exists in the schema; workout *completion* is tracked via the habit-stack routine step, but duration/notes/distance aren't captured anywhere yet).
+- No "load a demo/example profile" seed flow — onboarding only supports entering a real profile by hand.
+- No real GPS integration for Travel discovery (a fixed placeholder location is used); no real discovery provider (mock only).
+- Editing a logged meal/hydration entry means delete-and-relog, not in-place field editing.
+- No push notifications/reminders; the fasting countdown is foreground-only.
 
 ## Stack
 
@@ -49,7 +57,9 @@ Jest runs as two projects (see `jest.config.js`):
 
 ## Data & storage
 
-SQLite on-device via `expo-sqlite`, database name `betterlife.db`, accessed through Drizzle ORM (`src/db/client.ts`). Schema lives in `src/db/schema.ts`; migrations are generated with `npx drizzle-kit generate` and committed under `src/db/migrations/`. The root layout runs pending migrations on launch and blocks navigation until they succeed. There's no reset/seed-demo-data UI yet — for now, uninstalling the app (or clearing app data) is the only way to start over.
+SQLite on-device via `expo-sqlite`, database name `betterlife.db`, accessed through Drizzle ORM (`src/db/client.ts`). Data lives in the app's sandboxed storage (standard iOS/Android app-data location managed by `expo-sqlite` — not user-accessible without a debug build/simulator file browser), so it is local-only, single-device, and not included in this MVP's scope for cloud backup. Schema lives in `src/db/schema.ts`; migrations are generated with `npx drizzle-kit generate` and committed under `src/db/migrations/`. The root layout runs pending migrations on launch and blocks navigation until they succeed.
+
+To start over during development or QA, use **Settings > Data > Reset all data** (`src/db/reset.ts`) — it clears every table and the app reactively drops back to onboarding, no reinstall needed. There is no "load a demo profile" seed flow; onboarding only supports entering a real profile by hand (see Status above).
 
 ## External services
 

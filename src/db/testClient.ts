@@ -17,14 +17,22 @@ migrate(drizzle(sqlite), { migrationsFolder: './src/db/migrations' });
 
 export const db = drizzle(sqlite, { schema });
 
-/** Clears every table between tests, without re-running migrations. */
+/**
+ * Clears every table between tests, without re-running migrations. Disables
+ * FK enforcement for the duration: `sqlite_master` order doesn't guarantee a
+ * dependency-safe delete order (e.g. dailyLogSnapshot rows referencing a
+ * dayType row deleted first), and this only ever runs between tests, never
+ * against real data.
+ */
 export function resetTestDb() {
   const tables = sqlite
     .prepare(
       `SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != '__drizzle_migrations'`
     )
     .all() as { name: string }[];
+  sqlite.pragma('foreign_keys = OFF');
   for (const { name } of tables) {
     sqlite.exec(`DELETE FROM "${name}"`);
   }
+  sqlite.pragma('foreign_keys = ON');
 }
