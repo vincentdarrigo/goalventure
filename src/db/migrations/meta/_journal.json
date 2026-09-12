@@ -8,6 +8,13 @@
       "when": 1789188259518,
       "tag": "0000_high_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789222723082,
+      "tag": "0001_fine_otto_octavius",
+      "breakpoints": true
     }
   ]
 }

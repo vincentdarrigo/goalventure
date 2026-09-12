@@ -18,7 +18,10 @@ Core MVP complete (Phases 0–9 of `docs/implementation-plan.md`). Summary of wh
 - **History & weight**: a 14-day rolling list plus a day-detail view to review and delete meal/hydration entries (aggregates recalculate live) and log/delete a same-day weight entry; an explicit empty state for a zero-log date.
 - **Data reset**: Settings > Data can wipe all on-device data for development/QA, which reactively drops the app back to onboarding.
 
-**Known gaps, deliberately deferred beyond this MVP pass** (see `docs/implementation-plan.md`'s Phase 9 addendum for the full reasoning):
+**Feature expansion in progress** (`docs/feature-expansion-plan.md`, Phases 10–19): supplements, a virtual pantry with overridable nutrition data, drag-and-drop meal planning, and a real backend for accountability-partner sharing.
+- **Phase 10 (supplements — core CRUD)** — done: `supplement`/`supplementDose` schema, a repo following the same query-builder/write-function split as every other entity, and a Settings > Supplements screen. No dose-tracking or Today integration yet — that's Phase 11.
+
+**Known gaps, deliberately deferred beyond the original MVP pass** (see `docs/implementation-plan.md`'s Phase 9 addendum for the full reasoning):
 - No activity/exercise session logging (the `activityLog` table exists in the schema; workout *completion* is tracked via the habit-stack routine step, but duration/notes/distance aren't captured anywhere yet).
 - No "load a demo/example profile" seed flow — onboarding only supports entering a real profile by hand.
 - No real GPS integration for Travel discovery (a fixed placeholder location is used); no real discovery provider (mock only).

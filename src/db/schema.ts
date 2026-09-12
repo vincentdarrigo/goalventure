@@ -167,6 +167,39 @@ export const appSetting = sqliteTable('app_setting', {
   value: text('value', { mode: 'json' }),
 });
 
+export const supplement = sqliteTable('supplement', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  dosageAmount: real('dosage_amount').notNull(),
+  dosageUnit: text('dosage_unit').notNull(), // free text: "mg", "g", "capsule" — never a hardcoded enum
+  timing: text('timing', {
+    enum: ['fasted', 'with_meal', 'bedtime', 'pre_workout', 'specific_time'],
+  }).notNull(),
+  specificTime: text('specific_time'), // "HH:mm", only meaningful when timing = 'specific_time'
+  notes: text('notes'),
+  order: integer('order').notNull().default(0),
+  archivedAt: text('archived_at'), // soft-delete: supplementDose rows must stay valid
+});
+
+export const supplementDose = sqliteTable(
+  'supplement_dose',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    supplementId: integer('supplement_id')
+      .notNull()
+      .references(() => supplement.id),
+    date: text('date').notNull(),
+    status: text('status', { enum: ['taken', 'skipped'] }).notNull(),
+    takenAt: text('taken_at'), // null when skipped
+    // Snapshotted at write time — editing the supplement later never rewrites
+    // history, same principle as foodLog.
+    nameSnapshot: text('name_snapshot').notNull(),
+    dosageAmountSnapshot: real('dosage_amount_snapshot').notNull(),
+    dosageUnitSnapshot: text('dosage_unit_snapshot').notNull(),
+  },
+  (t) => [uniqueIndex('supplement_dose_supplement_date_unique').on(t.supplementId, t.date)]
+);
+
 // The mid-week-target-change fix: written once, the first time any activity is
 // logged for a calendar date, freezing what resolveDayType() produced at that
 // moment. Later edits to dayType/weeklySchedule never retroactively change a

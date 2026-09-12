@@ -16,6 +16,8 @@ export default function SettingsLayout() {
       <Stack.Screen name="meal-stacks/index" options={{ title: 'Meal Stacks' }} />
       <Stack.Screen name="meal-stacks/[id]/index" options={{ title: 'Meal Stack' }} />
       <Stack.Screen name="data" options={{ title: 'Data' }} />
+      <Stack.Screen name="supplements/index" options={{ title: 'Supplements' }} />
+      <Stack.Screen name="supplements/[id]" options={{ title: 'Supplement' }} />
     </Stack>
   );
 }

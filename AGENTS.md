@@ -19,7 +19,7 @@ Expo + TypeScript (strict) + Expo Router (file-based routing) + Drizzle ORM over
 - `src/hooks/` — glue: compose `domain` + repositories into React (live-query wrappers, `useFastingState`, etc.). Hooks call repositories, never `db`/`schema` directly.
 - `src/stores/`, `src/components/`, `src/lib/` — UI-state, presentational components, shared utilities.
 - **Tests colocated inside `app/` must live in an `__tests__/` subfolder** (e.g. `app/(tabs)/__tests__/index.test.tsx`), not as a sibling `*.test.tsx` file — Expo Router treats any other file under `app/` as a route, and a `.test.tsx` file left as a direct sibling gets exported as a real route.
-- Full architecture, schema, and phased build plan (including per-phase addenda on deviations and gotchas): `docs/implementation-plan.md`.
+- Full architecture, schema, and phased build plan (including per-phase addenda on deviations and gotchas): `docs/implementation-plan.md` (original 9-phase MVP, complete) and `docs/feature-expansion-plan.md` (supplements, pantry, meal planning, accountability-partner backend — in progress).
 
 ## Testing
 
