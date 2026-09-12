@@ -3,6 +3,8 @@ import Fastify from 'fastify';
 
 import type * as schema from './db/schema.js';
 import { registerAccountRoutes } from './routes/accounts.js';
+import { registerCheckInItemRoutes } from './routes/checkInItems.js';
+import { registerDailySummaryRoutes } from './routes/dailySummaries.js';
 import { registerDeviceLinkCodeRoutes } from './routes/deviceLinkCodes.js';
 import { registerPairingRoutes } from './routes/pairings.js';
 
@@ -23,6 +25,8 @@ export function buildApp<TQueryResult extends PgQueryResultHKT>(
   registerAccountRoutes(app, db);
   registerDeviceLinkCodeRoutes(app, db);
   registerPairingRoutes(app, db);
+  registerCheckInItemRoutes(app, db);
+  registerDailySummaryRoutes(app, db);
 
   return app;
 }

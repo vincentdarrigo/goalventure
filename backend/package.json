@@ -16,11 +16,13 @@
   "dependencies": {
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.4",
+    "luxon": "^3.7.2",
     "pg": "^8.23.0",
     "zod": "^4.6.2"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@types/luxon": "^3.7.5",
     "@types/node": "^22.20.2",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.10",
