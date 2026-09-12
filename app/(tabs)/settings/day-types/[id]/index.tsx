@@ -204,6 +204,16 @@ export default function DayTypeFormScreen() {
         </Text>
       </Pressable>
 
+      {!isNew && dayTypeId !== null && (
+        <Pressable
+          onPress={() => router.push(`/settings/day-types/${dayTypeId}/routine`)}
+          className="items-center rounded-full border border-neutral-200 py-4 active:opacity-70 dark:border-neutral-800">
+          <Text className="text-base font-semibold text-neutral-900 dark:text-white">
+            Edit routine steps
+          </Text>
+        </Pressable>
+      )}
+
       {!isNew && (
         <Pressable
           onPress={handleArchive}

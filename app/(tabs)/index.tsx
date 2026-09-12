@@ -1,9 +1,12 @@
 import { router } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { formatDuration } from '@/src/lib/formatDuration';
+import { RoutineChecklist } from '@/src/components/today/RoutineChecklist';
+import { todayIsoInZone } from '@/src/domain/datetime';
 import { useFastingState } from '@/src/hooks/useFastingState';
+import { useTodayRoutine } from '@/src/hooks/useTodayRoutine';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
+import { formatDuration } from '@/src/lib/formatDuration';
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +32,12 @@ export default function TodayScreen() {
 
 function TodayContent({ timezone }: { timezone: string }) {
   const result = useFastingState(timezone);
+  // Hooks must run unconditionally: fall back to a harmless placeholder
+  // (dayTypeId 0 matches no rows) until the fasting state is actually ready.
+  const routine = useTodayRoutine(
+    result.status === 'ready' ? result.today.dayType.id : 0,
+    result.status === 'ready' ? result.today.date : todayIsoInZone(timezone)
+  );
 
   if (result.status === 'loading') {
     return (
@@ -60,7 +69,9 @@ function TodayContent({ timezone }: { timezone: string }) {
   const isEating = fastingState.phase === 'eating';
 
   return (
-    <View className="flex-1 gap-4 bg-white px-6 pt-16 dark:bg-neutral-950">
+    <ScrollView
+      className="flex-1 bg-white dark:bg-neutral-950"
+      contentContainerClassName="gap-4 px-6 pb-12 pt-16">
       <View className="self-start rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-900">
         <Text className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
           {today.dayType.name}
@@ -79,7 +90,7 @@ function TodayContent({ timezone }: { timezone: string }) {
         </Text>
       )}
 
-      <View className="mt-4 flex-row gap-6">
+      <View className="mt-1 flex-row gap-6">
         <View>
           <Text className="text-sm text-neutral-500 dark:text-neutral-400">Calorie target</Text>
           <Text className="text-xl font-semibold text-neutral-900 dark:text-white">
@@ -93,6 +104,15 @@ function TodayContent({ timezone }: { timezone: string }) {
           </Text>
         </View>
       </View>
-    </View>
+
+      {routine.status === 'ready' && routine.steps.length > 0 && (
+        <View className="mt-4 gap-3">
+          <Text className="text-lg font-semibold text-neutral-900 dark:text-white">
+            {routine.next ? `Next: ${routine.next.label}` : 'All done for today 🎉'}
+          </Text>
+          <RoutineChecklist steps={routine.steps} onSetStatus={routine.setStepStatus} />
+        </View>
+      )}
+    </ScrollView>
   );
 }
