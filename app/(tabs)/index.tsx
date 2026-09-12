@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { HydrationCard } from '@/src/components/today/HydrationCard';
 import { MealLogGrid } from '@/src/components/today/MealLogGrid';
 import { RoutineChecklist } from '@/src/components/today/RoutineChecklist';
 import { WeeklyBudgetCard } from '@/src/components/today/WeeklyBudgetCard';
@@ -8,6 +9,7 @@ import { todayIsoInZone } from '@/src/domain/datetime';
 import type { DayType, ResolvedDayType } from '@/src/domain/types';
 import { useFastingState } from '@/src/hooks/useFastingState';
 import { type LogMealInput, useLogMeal } from '@/src/hooks/useLogMeal';
+import { useTodayHydration } from '@/src/hooks/useTodayHydration';
 import { useTodayMacros } from '@/src/hooks/useTodayMacros';
 import { useTodayRoutine } from '@/src/hooks/useTodayRoutine';
 import { useUserProfile } from '@/src/hooks/useUserProfile';
@@ -49,10 +51,10 @@ export default function TodayScreen() {
     );
   }
 
-  return <TodayContent timezone={profile.timezone} />;
+  return <TodayContent timezone={profile.timezone} hydrationGoalOz={profile.hydrationGoalOz} />;
 }
 
-function TodayContent({ timezone }: { timezone: string }) {
+function TodayContent({ timezone, hydrationGoalOz }: { timezone: string; hydrationGoalOz: number }) {
   const result = useFastingState(timezone);
 
   // Hooks must run unconditionally: fall back to placeholders until ready.
@@ -63,6 +65,7 @@ function TodayContent({ timezone }: { timezone: string }) {
   const routine = useTodayRoutine(today);
   const macros = useTodayMacros(today, timezone);
   const weeklyBudget = useWeeklyBudget(today.date, timezone);
+  const hydration = useTodayHydration(today, timezone, hydrationGoalOz);
   const logMeal = useLogMeal(yesterday, today, timezone);
 
   async function handleLog(input: LogMealInput) {
@@ -70,6 +73,14 @@ function TodayContent({ timezone }: { timezone: string }) {
       await logMeal(input);
     } catch (e) {
       Alert.alert('Couldn’t log that meal', e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function handleAddWater(ounces: number) {
+    try {
+      await hydration.addOunces(ounces);
+    } catch (e) {
+      Alert.alert('Couldn’t log that', e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -155,6 +166,8 @@ function TodayContent({ timezone }: { timezone: string }) {
       )}
 
       {weeklyBudget && <WeeklyBudgetCard budget={weeklyBudget} />}
+
+      {hydration.progress && <HydrationCard progress={hydration.progress} onAdd={handleAddWater} />}
 
       <View className="mt-2 gap-3">
         <Text className="text-lg font-semibold text-neutral-900 dark:text-white">Log a meal</Text>
