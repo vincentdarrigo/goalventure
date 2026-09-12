@@ -21,7 +21,8 @@ Core MVP complete (Phases 0–9 of `docs/implementation-plan.md`). Summary of wh
 **Feature expansion in progress** (`docs/feature-expansion-plan.md`, Phases 10–19): supplements, a virtual pantry with overridable nutrition data, drag-and-drop meal planning, and a real backend for accountability-partner sharing.
 - **Phase 10 (supplements — core CRUD)** — done: `supplement`/`supplementDose` schema, a repo following the same query-builder/write-function split as every other entity, and a Settings > Supplements screen.
 - **Phase 11 (supplements — Today integration)** — done: a pure `computeSupplementUrgency`/`buildSupplementChecklist` domain layer (flags a `fasted` dose once eating starts, or a `specific_time` dose once it's overdue), `useTodaySupplements`, and a Supplements checklist card on Today with take/skip, wired through the same `onceGuard`/`ensureDailySnapshot` path every other write uses.
-- **Phase 12 (pantry — data model + manual entry)** — done: an `ingredient` table (name, serving size, calories/protein/carbs/fat/fiber, provenance fields for a future data-source import) and a Settings > Pantry screen for hand-entering ingredients. Not yet wired to meal presets or a real nutrition-data source — that's Phases 13–14.
+- **Phase 12 (pantry — data model + manual entry)** — done: an `ingredient` table (name, serving size, calories/protein/carbs/fat/fiber, provenance fields for a future data-source import) and a Settings > Pantry screen for hand-entering ingredients.
+- **Phase 13 (pantry — USDA FoodData Central integration)** — done: `src/services/nutrition-data/` (same interface+mock+factory shape as the location-discovery adapter), a real `UsdaFdcProvider`, and a Search Foods screen — tap a result to import it as an editable pantry ingredient. Defaults to the mock provider (no key needed); see "Getting started" below to enable real search. Not yet wired to meal presets — that's Phase 14.
 
 **Known gaps, deliberately deferred beyond the original MVP pass** (see `docs/implementation-plan.md`'s Phase 9 addendum for the full reasoning):
 - No activity/exercise session logging (the `activityLog` table exists in the schema; workout *completion* is tracked via the habit-stack routine step, but duration/notes/distance aren't captured anywhere yet).
@@ -43,6 +44,9 @@ npm run ios
 npm run android
 npm run web
 ```
+
+Copy `.env.example` to `.env` to configure optional real external providers (both default to a fully-offline mock with no setup needed):
+- Real pantry search: get a free API key at [fdc.nal.usda.gov/api-key-signup.html](https://fdc.nal.usda.gov/api-key-signup.html) (instant, email only, no card), then set `EXPO_PUBLIC_NUTRITION_PROVIDER=usda_fdc` and `EXPO_PUBLIC_USDA_FDC_API_KEY`.
 
 ## Scripts
 
@@ -69,3 +73,5 @@ To start over during development or QA, use **Settings > Data > Reset all data**
 ## External services
 
 The Travel/Wildcard screen's nearby-food and nearby-movement suggestions go through `src/services/location-discovery/`, an interface (`LocationDiscoveryProvider`) with a mocked default implementation (canned fixtures, simulated latency, no API key or network required). Set `EXPO_PUBLIC_DISCOVERY_PROVIDER` to switch providers once a real one exists — the Travel screen and its hooks never need to change either way. Location itself is a fixed placeholder for now; real GPS integration (via `expo-location` and its permission flow) isn't built yet.
+
+Pantry's ingredient search goes through `src/services/nutrition-data/` — same interface+mock+factory shape, real implementation against [USDA FoodData Central](https://fdc.nal.usda.gov/) (free, no cost, 1,000 req/hour on a free key). The API key is currently client-side (`EXPO_PUBLIC_USDA_FDC_API_KEY`) since it carries no billing risk; the plan is to proxy it through the accountability-partner backend once that exists (see `docs/feature-expansion-plan.md`), not before shipping Pantry.

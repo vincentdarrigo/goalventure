@@ -8,6 +8,7 @@ module.exports = {
         '<rootDir>/src/domain/**/*.test.ts',
         '<rootDir>/src/lib/**/*.test.ts',
         '<rootDir>/src/db/**/*.test.ts',
+        '<rootDir>/src/services/**/*.test.ts',
       ],
       transform: {
         '^.+\\.tsx?$': ['babel-jest', { presets: ['babel-preset-expo'] }],

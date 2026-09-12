@@ -31,13 +31,22 @@ export default function PantryScreen() {
           />
         ))}
       </ScrollView>
-      <Pressable
-        onPress={() => router.push('/settings/pantry/new')}
-        className="m-4 items-center rounded-full bg-neutral-900 py-4 active:opacity-80 dark:bg-white">
-        <Text className="text-base font-semibold text-white dark:text-neutral-900">
-          Add Ingredient
-        </Text>
-      </Pressable>
+      <View className="flex-row gap-2 p-4">
+        <Pressable
+          onPress={() => router.push('/settings/pantry/search')}
+          className="flex-1 items-center rounded-full border border-neutral-300 py-4 active:opacity-70 dark:border-neutral-700">
+          <Text className="text-base font-semibold text-neutral-900 dark:text-white">
+            Search Foods
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push('/settings/pantry/new')}
+          className="flex-1 items-center rounded-full bg-neutral-900 py-4 active:opacity-80 dark:bg-white">
+          <Text className="text-base font-semibold text-white dark:text-neutral-900">
+            Add Manually
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

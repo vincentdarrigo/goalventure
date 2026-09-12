@@ -20,6 +20,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="supplements/[id]" options={{ title: 'Supplement' }} />
       <Stack.Screen name="pantry/index" options={{ title: 'Pantry' }} />
       <Stack.Screen name="pantry/[id]" options={{ title: 'Ingredient' }} />
+      <Stack.Screen name="pantry/search" options={{ title: 'Search Foods', presentation: 'modal' }} />
     </Stack>
   );
 }
