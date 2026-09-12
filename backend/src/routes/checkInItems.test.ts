@@ -126,6 +126,43 @@ describe('check-in items', () => {
     expect(del.statusCode).toBe(404);
   });
 
+  test('a confirmed partner can read the tracked account\'s item definitions, a stranger cannot', async () => {
+    const owner = await createTestAccount(app, 'Vince');
+    const partner = await createTestAccount(app, 'Partner');
+    const stranger = await createTestAccount(app, 'Stranger');
+
+    await app.inject({
+      method: 'POST',
+      url: '/check-in-items',
+      headers: { authorization: owner.authHeader },
+      payload: { key: 'water_100oz', label: '100oz water', valueType: 'boolean' },
+    });
+
+    const invite = await app.inject({ method: 'POST', url: '/pairings/invite', headers: { authorization: owner.authHeader } });
+    const { code } = invite.json() as { code: string };
+    await app.inject({
+      method: 'POST',
+      url: '/pairings/accept',
+      headers: { authorization: partner.authHeader },
+      payload: { code },
+    });
+
+    const asPartner = await app.inject({
+      method: 'GET',
+      url: `/accounts/${owner.accountId}/check-in-items`,
+      headers: { authorization: partner.authHeader },
+    });
+    expect(asPartner.statusCode).toBe(200);
+    expect(asPartner.json().items).toHaveLength(1);
+
+    const asStranger = await app.inject({
+      method: 'GET',
+      url: `/accounts/${owner.accountId}/check-in-items`,
+      headers: { authorization: stranger.authHeader },
+    });
+    expect(asStranger.statusCode).toBe(403);
+  });
+
   test('patch updates the label without touching key or valueType', async () => {
     const owner = await createTestAccount(app, 'Vince');
     const created = await app.inject({

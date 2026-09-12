@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Goalventure — Check-ins</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main>
+    <div class="top-bar">
+      <h1 id="title">Check-ins</h1>
+      <a href="/index.html">&larr; Back</a>
+    </div>
+    <p class="muted">Last 14 days. Only what they've chosen to check in — nothing else about their account.</p>
+
+    <p id="error" class="error" hidden></p>
+
+    <section class="card">
+      <div id="summary-list"></div>
+      <p id="empty" class="muted" hidden>No check-ins recorded yet.</p>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const targetId = params.get('id');
+    const targetName = params.get('name') || 'this person';
+
+    if (!getCredential() || !targetId) {
+      location.href = '/index.html';
+    }
+
+    document.getElementById('title').textContent = `${targetName}'s check-ins`;
+
+    function formatValue(value) {
+      if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+      return String(value);
+    }
+
+    async function load() {
+      const errorEl = document.getElementById('error');
+      const listEl = document.getElementById('summary-list');
+      const emptyEl = document.getElementById('empty');
+
+      try {
+        const [itemsResult, summariesResult] = await Promise.all([
+          api(`/accounts/${targetId}/check-in-items`).catch(() => ({ items: [] })),
+          api(`/accounts/${targetId}/daily-summaries`),
+        ]);
+
+        const labelByKey = new Map(itemsResult.items.map((item) => [item.key, item]));
+        listEl.innerHTML = '';
+        emptyEl.hidden = summariesResult.summaries.length > 0;
+
+        for (const summary of summariesResult.summaries) {
+          const dayEl = document.createElement('div');
+          dayEl.className = 'summary-day';
+
+          const dateEl = document.createElement('div');
+          dateEl.className = 'date';
+          dateEl.textContent = summary.date;
+          dayEl.appendChild(dateEl);
+
+          for (const [key, value] of Object.entries(summary.payload)) {
+            const item = labelByKey.get(key);
+            const rowEl = document.createElement('div');
+            rowEl.className = 'field-row';
+
+            const labelSpan = document.createElement('span');
+            labelSpan.textContent = item ? item.label : key;
+
+            const valueSpan = document.createElement('span');
+            valueSpan.textContent = formatValue(value);
+            if (typeof value === 'boolean') {
+              valueSpan.className = value ? 'value-true' : 'value-false';
+            }
+
+            rowEl.appendChild(labelSpan);
+            rowEl.appendChild(valueSpan);
+            dayEl.appendChild(rowEl);
+          }
+
+          listEl.appendChild(dayEl);
+        }
+      } catch (err) {
+        errorEl.textContent = err.status === 403 ? `You're not a confirmed supporter for ${targetName}.` : err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

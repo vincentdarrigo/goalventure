@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import { checkInItem } from '../db/schema.js';
 import type * as schema from '../db/schema.js';
-import { requireAccount } from '../lib/auth.js';
+import { canViewAccount, requireAccount } from '../lib/auth.js';
 
 // Lowercase snake_case only — this is the literal key a daily_summary
 // payload will be written under, so it needs to survive round-tripping
@@ -44,6 +44,31 @@ export function registerCheckInItemRoutes<TQueryResult extends PgQueryResultHKT>
 
     const items = await db.query.checkInItem.findMany({
       where: and(eq(checkInItem.accountId, auth.accountId), isNull(checkInItem.archivedAt)),
+      orderBy: (item, { asc }) => [asc(item.order)],
+    });
+
+    return reply.status(200).send({ items });
+  });
+
+  // Lets a confirmed partner fetch the tracked account's item *definitions*
+  // (labels/valueType, not values) so a summary view can render real labels
+  // instead of raw payload keys — read-only, and never exposes another
+  // account's items to a non-partner.
+  app.get('/accounts/:id/check-in-items', async (request, reply) => {
+    const auth = await requireAccount(db, request, reply);
+    if (!auth) return;
+
+    const params = z.object({ id: z.string().uuid() }).safeParse(request.params);
+    if (!params.success) {
+      return reply.status(400).send({ error: 'invalid_params' });
+    }
+
+    if (!(await canViewAccount(db, params.data.id, auth.accountId))) {
+      return reply.status(403).send({ error: 'not_a_confirmed_partner' });
+    }
+
+    const items = await db.query.checkInItem.findMany({
+      where: and(eq(checkInItem.accountId, params.data.id), isNull(checkInItem.archivedAt)),
       orderBy: (item, { asc }) => [asc(item.order)],
     });
 

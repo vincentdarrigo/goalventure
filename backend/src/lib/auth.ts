@@ -1,8 +1,8 @@
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import { account } from '../db/schema.js';
+import { account, partnership } from '../db/schema.js';
 import type * as schema from '../db/schema.js';
 import { hashSecret } from './secret.js';
 
@@ -40,4 +40,24 @@ export async function requireAccount<TQueryResult extends PgQueryResultHKT>(
   }
 
   return { accountId: row.id };
+}
+
+/**
+ * True for the account itself, or for an account that is a confirmed
+ * partner of it (a `partnership` row with `accountId: targetAccountId,
+ * partnerAccountId: viewerAccountId`). Shared by every read endpoint a
+ * partner needs — daily summaries and, for rendering their labels, the
+ * tracked account's check-in item definitions.
+ */
+export async function canViewAccount<TQueryResult extends PgQueryResultHKT>(
+  db: PgDatabase<TQueryResult, typeof schema>,
+  targetAccountId: string,
+  viewerAccountId: string
+): Promise<boolean> {
+  if (targetAccountId === viewerAccountId) return true;
+
+  const confirmed = await db.query.partnership.findFirst({
+    where: and(eq(partnership.accountId, targetAccountId), eq(partnership.partnerAccountId, viewerAccountId)),
+  });
+  return confirmed !== undefined;
 }

@@ -4,9 +4,9 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 
-import { dailySummary, partnership } from '../db/schema.js';
+import { dailySummary } from '../db/schema.js';
 import type * as schema from '../db/schema.js';
-import { requireAccount } from '../lib/auth.js';
+import { canViewAccount, requireAccount } from '../lib/auth.js';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const PayloadValue = z.union([z.boolean(), z.number(), z.string()]);
@@ -63,13 +63,8 @@ export function registerDailySummaryRoutes<TQueryResult extends PgQueryResultHKT
     }
 
     const targetAccountId = params.data.id;
-    if (targetAccountId !== auth.accountId) {
-      const confirmedPartner = await db.query.partnership.findFirst({
-        where: and(eq(partnership.accountId, targetAccountId), eq(partnership.partnerAccountId, auth.accountId)),
-      });
-      if (!confirmedPartner) {
-        return reply.status(403).send({ error: 'not_a_confirmed_partner' });
-      }
+    if (!(await canViewAccount(db, targetAccountId, auth.accountId))) {
+      return reply.status(403).send({ error: 'not_a_confirmed_partner' });
     }
 
     const to = query.data.to ?? DateTime.utc().toFormat('yyyy-LL-dd');

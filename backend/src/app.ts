@@ -1,3 +1,7 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import fastifyStatic from '@fastify/static';
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import Fastify from 'fastify';
 
@@ -7,6 +11,10 @@ import { registerCheckInItemRoutes } from './routes/checkInItems.js';
 import { registerDailySummaryRoutes } from './routes/dailySummaries.js';
 import { registerDeviceLinkCodeRoutes } from './routes/deviceLinkCodes.js';
 import { registerPairingRoutes } from './routes/pairings.js';
+
+// Sibling of dist/ (after `tsc`) and of src/ (under `tsx`) alike — public/
+// is committed source, not generated, so both layouts find it the same way.
+const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../public');
 
 /**
  * db is injected as a plain parameter rather than a Fastify decoration —
@@ -19,6 +27,8 @@ export function buildApp<TQueryResult extends PgQueryResultHKT>(
   options: { logger?: boolean } = {}
 ) {
   const app = Fastify({ logger: options.logger ?? true });
+
+  app.register(fastifyStatic, { root: publicDir });
 
   app.get('/health', async () => ({ status: 'ok' }));
 

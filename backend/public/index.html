@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Goalventure — Accountability</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main>
+    <div class="top-bar">
+      <h1>Goalventure</h1>
+      <button id="sign-out-button" class="secondary" style="width:auto" hidden>Sign out</button>
+    </div>
+    <p class="muted">A glance at the people you're supporting — no account data leaves this page except what they've chosen to share.</p>
+
+    <section id="setup-card" class="card" hidden>
+      <h2>Get started</h2>
+      <label for="display-name">Your name</label>
+      <input type="text" id="display-name" placeholder="e.g. Sam" autocomplete="name" />
+      <button id="create-account-button">Continue</button>
+      <p id="setup-error" class="error" hidden></p>
+    </section>
+
+    <section id="invite-card" class="card" hidden>
+      <h2>Accept an invite</h2>
+      <p class="muted" style="margin-bottom:8px">Paste the code the person you're supporting shared with you.</p>
+      <label for="invite-code">Invite code</label>
+      <input type="text" id="invite-code" placeholder="e.g. K7M2QRXF" autocapitalize="characters" />
+      <button id="accept-invite-button">Accept</button>
+      <p id="invite-error" class="error" hidden></p>
+      <p id="invite-success" class="muted" hidden></p>
+    </section>
+
+    <section id="partners-card" class="card" hidden>
+      <h2>People you're supporting</h2>
+      <ul class="partner-list" id="partner-list"></ul>
+      <p class="muted" id="no-partners" hidden>Nobody yet — accept an invite above to get started.</p>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const setupCard = document.getElementById('setup-card');
+    const inviteCard = document.getElementById('invite-card');
+    const partnersCard = document.getElementById('partners-card');
+    const signOutButton = document.getElementById('sign-out-button');
+
+    function render() {
+      const credential = getCredential();
+      setupCard.hidden = Boolean(credential);
+      inviteCard.hidden = !credential;
+      partnersCard.hidden = !credential;
+      signOutButton.hidden = !credential;
+      if (credential) loadPartners();
+    }
+
+    document.getElementById('create-account-button').addEventListener('click', async () => {
+      const errorEl = document.getElementById('setup-error');
+      errorEl.hidden = true;
+      const displayName = document.getElementById('display-name').value.trim();
+      if (!displayName) {
+        errorEl.textContent = 'Enter a name to continue.';
+        errorEl.hidden = false;
+        return;
+      }
+      try {
+        const account = await api('/accounts', { method: 'POST', body: JSON.stringify({ displayName }) });
+        setCredential({ accountId: account.accountId, accountSecret: account.accountSecret, displayName: account.displayName });
+        render();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    });
+
+    document.getElementById('accept-invite-button').addEventListener('click', async () => {
+      const errorEl = document.getElementById('invite-error');
+      const successEl = document.getElementById('invite-success');
+      errorEl.hidden = true;
+      successEl.hidden = true;
+      const code = document.getElementById('invite-code').value.trim();
+      if (!code) return;
+      try {
+        const result = await api(`/pairings/accept`, { method: 'POST', body: JSON.stringify({ code }) });
+        document.getElementById('invite-code').value = '';
+        successEl.textContent = `You're now supporting ${result.displayName}.`;
+        successEl.hidden = false;
+        loadPartners();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    });
+
+    signOutButton.addEventListener('click', () => {
+      clearCredential();
+      render();
+    });
+
+    async function loadPartners() {
+      const list = document.getElementById('partner-list');
+      const empty = document.getElementById('no-partners');
+      try {
+        const { asPartner } = await api('/pairings');
+        list.innerHTML = '';
+        empty.hidden = asPartner.length > 0;
+        for (const p of asPartner) {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `/partner.html?id=${encodeURIComponent(p.trackedAccountId)}&name=${encodeURIComponent(p.trackedDisplayName)}`;
+          a.textContent = p.trackedDisplayName;
+          li.appendChild(a);
+          list.appendChild(li);
+        }
+      } catch (err) {
+        if (err.status === 401) {
+          clearCredential();
+          render();
+        }
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
