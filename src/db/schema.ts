@@ -22,8 +22,11 @@ export const userProfile = sqliteTable('user_profile', {
 export const dayType = sqliteTable('day_type', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
-  eatingWindowStart: text('eating_window_start'), // "HH:mm"; null = no eating window (fast day)
-  eatingWindowEnd: text('eating_window_end'), // "HH:mm"; end <= start means the window crosses midnight
+  // Both null + isFastDay true = a hard fast. Both null + isFastDay false =
+  // flexible/unrestricted eating with no fixed window (e.g. Travel/Wildcard,
+  // Game Day). Both set = a timed window; end <= start crosses midnight.
+  eatingWindowStart: text('eating_window_start'),
+  eatingWindowEnd: text('eating_window_end'),
   isFastDay: integer('is_fast_day', { mode: 'boolean' }).notNull().default(false),
   calorieTarget: integer('calorie_target').notNull(),
   proteinTarget: integer('protein_target').notNull(),

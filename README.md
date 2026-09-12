@@ -9,7 +9,8 @@ See `Health_Transformation_App_MVP_Claude_Code_Spec.docx` for the full product s
 MVP in progress.
 
 - **Phase 0 (bootstrap)** — done: Expo Router shell, TypeScript strict mode, NativeWind, ESLint, Jest.
-- **Phase 1 (foundation)** — done: full Drizzle schema + first migration, on-device SQLite via `expo-sqlite`, a migration gate and profile gate in the root layout, Luxon date/time helpers (with DST-boundary tests), and an onboarding flow that writes a real `UserProfile` row. Settings screens to edit day types, schedule, and presets don't exist yet — Today/Travel/History tabs are still placeholders.
+- **Phase 1 (foundation)** — done: full Drizzle schema + first migration, on-device SQLite via `expo-sqlite`, a migration gate and profile gate in the root layout, Luxon date/time helpers (with DST-boundary tests), and an onboarding flow that writes a real `UserProfile` row.
+- **Phase 2 (day types & schedule)** — done: CRUD for day types, the weekly schedule, and date overrides (Settings tab); a pure `resolveDayType`/`computeFastingState` domain layer (DST- and midnight-crossing-safe, with a "flexible/unrestricted" day kind alongside timed windows and hard fasts); the Today tab now shows the live eating-window/fasting state instead of a placeholder. Meal/hydration/activity logging, weekly budgets, and Travel/History are still unbuilt.
 
 ## Stack
 

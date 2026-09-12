@@ -1,20 +1,10 @@
 import { router } from 'expo-router';
-import { type ReactNode, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { FormField } from '@/src/components/shared/FormField';
 import { createUserProfile } from '@/src/db/repositories/userProfileRepo';
 import { deviceTimezone } from '@/src/lib/datetime';
-
-function FieldLabel({ children }: { children: ReactNode }) {
-  return (
-    <Text className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-      {children}
-    </Text>
-  );
-}
-
-const inputClassName =
-  'rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-base text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white';
 
 export default function OnboardingProfileScreen() {
   const [timezone, setTimezone] = useState(deviceTimezone());
@@ -53,7 +43,9 @@ export default function OnboardingProfileScreen() {
       <Text className="text-2xl font-bold text-neutral-900 dark:text-white">Your profile</Text>
 
       <View>
-        <FieldLabel>Units</FieldLabel>
+        <Text className="mb-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          Units
+        </Text>
         <View className="flex-row gap-2">
           {(['imperial', 'metric'] as const).map((option) => (
             <Pressable
@@ -77,50 +69,38 @@ export default function OnboardingProfileScreen() {
         </View>
       </View>
 
-      <View>
-        <FieldLabel>Timezone</FieldLabel>
-        <TextInput
-          value={timezone}
-          onChangeText={setTimezone}
-          autoCapitalize="none"
-          autoCorrect={false}
-          placeholder="America/Chicago"
-          className={inputClassName}
-        />
-      </View>
+      <FormField
+        label="Timezone"
+        value={timezone}
+        onChangeText={setTimezone}
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder="America/Chicago"
+      />
 
-      <View>
-        <FieldLabel>Current weight ({units === 'imperial' ? 'lb' : 'kg'}) — optional</FieldLabel>
-        <TextInput
-          value={currentWeight}
-          onChangeText={setCurrentWeight}
-          keyboardType="decimal-pad"
-          placeholder="265"
-          className={inputClassName}
-        />
-      </View>
+      <FormField
+        label={`Current weight (${units === 'imperial' ? 'lb' : 'kg'}) — optional`}
+        value={currentWeight}
+        onChangeText={setCurrentWeight}
+        keyboardType="decimal-pad"
+        placeholder="265"
+      />
 
-      <View>
-        <FieldLabel>Target weight ({units === 'imperial' ? 'lb' : 'kg'}) — optional</FieldLabel>
-        <TextInput
-          value={targetWeight}
-          onChangeText={setTargetWeight}
-          keyboardType="decimal-pad"
-          placeholder="200"
-          className={inputClassName}
-        />
-      </View>
+      <FormField
+        label={`Target weight (${units === 'imperial' ? 'lb' : 'kg'}) — optional`}
+        value={targetWeight}
+        onChangeText={setTargetWeight}
+        keyboardType="decimal-pad"
+        placeholder="200"
+      />
 
-      <View>
-        <FieldLabel>Daily hydration goal ({units === 'imperial' ? 'oz' : 'mL'})</FieldLabel>
-        <TextInput
-          value={hydrationGoalOz}
-          onChangeText={setHydrationGoalOz}
-          keyboardType="decimal-pad"
-          placeholder="100"
-          className={inputClassName}
-        />
-      </View>
+      <FormField
+        label={`Daily hydration goal (${units === 'imperial' ? 'oz' : 'mL'})`}
+        value={hydrationGoalOz}
+        onChangeText={setHydrationGoalOz}
+        keyboardType="decimal-pad"
+        placeholder="100"
+      />
 
       {error && <Text className="text-sm text-red-600 dark:text-red-400">{error}</Text>}
 

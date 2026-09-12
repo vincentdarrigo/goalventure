@@ -3,6 +3,8 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '../client';
 import { userProfile } from '../schema';
 
+export type UserProfileRow = typeof userProfile.$inferSelect;
+
 export type UserProfileInput = {
   timezone: string;
   currentWeight?: number | null;
@@ -11,10 +13,9 @@ export type UserProfileInput = {
   units: 'imperial' | 'metric';
 };
 
-/** The app is single-user/single-device; there is at most one profile row. */
-export async function getUserProfile() {
-  const rows = await db.select().from(userProfile).limit(1);
-  return rows[0] ?? null;
+/** The app is single-user/single-device; there is at most one profile row. Live-query-able. */
+export function userProfileQuery() {
+  return db.select().from(userProfile).limit(1);
 }
 
 export async function createUserProfile(input: UserProfileInput) {
