@@ -93,6 +93,25 @@ export const mealPreset = sqliteTable('meal_preset', {
   archivedAt: text('archived_at'),
 });
 
+export const ingredient = sqliteTable('ingredient', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  brand: text('brand'),
+  servingSizeAmount: real('serving_size_amount').notNull(),
+  servingSizeUnit: text('serving_size_unit').notNull(), // 'g' | 'ml' | 'serving' — free text
+  servingDescription: text('serving_description'),
+  calories: real('calories').notNull(),
+  proteinG: real('protein_g').notNull(),
+  carbsG: real('carbs_g'),
+  fatG: real('fat_g'),
+  fiberG: real('fiber_g'),
+  // Provenance only — a search result becomes an ordinary, fully-editable row
+  // once imported; these are never auto-resynced against the source.
+  sourceProvider: text('source_provider'), // 'usda_fdc' | null
+  sourceExternalId: text('source_external_id'), // e.g. a USDA fdcId
+  archivedAt: text('archived_at'), // soft-delete: mealPresetIngredient/foodLog rows may reference this
+});
+
 export const mealStack = sqliteTable('meal_stack', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),

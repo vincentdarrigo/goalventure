@@ -33,6 +33,11 @@ export default function SettingsScreen() {
         onPress={() => router.push('/settings/supplements')}
       />
       <ListRow
+        title="Pantry"
+        subtitle="Ingredients with real nutrition data"
+        onPress={() => router.push('/settings/pantry')}
+      />
+      <ListRow
         title="Data"
         subtitle="Reset all data (development/QA)"
         onPress={() => router.push('/settings/data')}

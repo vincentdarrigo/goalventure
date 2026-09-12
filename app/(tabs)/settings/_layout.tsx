@@ -18,6 +18,8 @@ export default function SettingsLayout() {
       <Stack.Screen name="data" options={{ title: 'Data' }} />
       <Stack.Screen name="supplements/index" options={{ title: 'Supplements' }} />
       <Stack.Screen name="supplements/[id]" options={{ title: 'Supplement' }} />
+      <Stack.Screen name="pantry/index" options={{ title: 'Pantry' }} />
+      <Stack.Screen name="pantry/[id]" options={{ title: 'Ingredient' }} />
     </Stack>
   );
 }

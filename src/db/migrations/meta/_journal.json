@@ -15,6 +15,13 @@
       "when": 1789222723082,
       "tag": "0001_fine_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789223242373,
+      "tag": "0002_far_typhoid_mary",
+      "breakpoints": true
     }
   ]
 }
