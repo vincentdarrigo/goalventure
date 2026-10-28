@@ -1,4 +1,4 @@
-import { date, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, date, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 export const account = pgTable('account', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -71,3 +71,75 @@ export const dailySummary = pgTable(
   },
   (t) => [uniqueIndex('daily_summary_account_date_unique').on(t.accountId, t.date)]
 );
+
+// Finance data intentionally stores labels and masked descriptions only. Bank
+// credentials, complete account numbers, and raw statements do not belong in
+// this database. Values use integer cents to avoid floating-point money math.
+export const financeSettings = pgTable('finance_settings', {
+  accountId: uuid('account_id')
+    .primaryKey()
+    .references(() => account.id),
+  gamblingBlocked: boolean('gambling_blocked').notNull().default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const financeAccount = pgTable('finance_account', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id')
+    .notNull()
+    .references(() => account.id),
+  name: text('name').notNull(),
+  kind: text('kind', { enum: ['checking', 'credit_card', 'loan', 'installment', 'cash', 'other'] }).notNull(),
+  currentBalanceCents: integer('current_balance_cents').notNull().default(0),
+  availableBalanceCents: integer('available_balance_cents'),
+  creditLimitCents: integer('credit_limit_cents'),
+  aprBasisPoints: integer('apr_basis_points'),
+  minimumPaymentCents: integer('minimum_payment_cents'),
+  dueDay: integer('due_day'),
+  autopay: boolean('autopay').notNull().default(false),
+  status: text('status', { enum: ['active', 'closed'] }).notNull().default('active'),
+  notes: text('notes'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const cashflowItem = pgTable('cashflow_item', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id')
+    .notNull()
+    .references(() => account.id),
+  financeAccountId: uuid('finance_account_id').references(() => financeAccount.id),
+  name: text('name').notNull(),
+  direction: text('direction', { enum: ['income', 'expense'] }).notNull(),
+  amountCents: integer('amount_cents').notNull(),
+  dueDate: date('due_date', { mode: 'string' }).notNull(),
+  category: text('category', {
+    enum: [
+      'income',
+      'housing',
+      'family',
+      'debt',
+      'subscription',
+      'food',
+      'transport',
+      'health',
+      'travel',
+      'fun',
+      'gambling',
+      'other',
+    ],
+  }).notNull(),
+  status: text('status', { enum: ['planned', 'pending', 'paid', 'paused', 'canceled'] })
+    .notNull()
+    .default('planned'),
+  priority: text('priority', { enum: ['critical', 'required', 'flexible'] }).notNull().default('required'),
+  autopay: boolean('autopay').notNull().default(false),
+  notes: text('notes'),
+  partnerDecision: text('partner_decision', { enum: ['unreviewed', 'approved', 'hold'] })
+    .notNull()
+    .default('unreviewed'),
+  partnerNote: text('partner_note'),
+  decidedByAccountId: uuid('decided_by_account_id').references(() => account.id),
+  decidedAt: timestamp('decided_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});

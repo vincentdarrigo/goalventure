@@ -104,6 +104,16 @@ Minimal endpoint surface: `POST /accounts` (lazy creation), `POST /device-link-c
     >
     > **Expo web-worker bundling issue — investigated, not reproduced, deprioritized:** Codex's UAT reported Metro failing to emit `expo-sqlite/web/worker.ts` under the live dev server, blocking full browser UAT. Re-ran `npx expo export --platform web` after every change in this phase (as always) and it continues to succeed cleanly with zero errors — strongly suggesting the failure is specific to `expo start --web`'s live dev server actually executing expo-sqlite's web WASM backend in a real browser, a code path static export never exercises. Web is not this app's shipping target (iOS/Android are), so this is left for Codex to chase down if/when real browser UAT matters, rather than invested in here.
 
+21A. **Household finance pilot.** A responsive web dashboard on the existing backend for manually configured accounts/debts and concrete dated cashflow items. — **COMPLETE**
+
+    > `finance_account`, `cashflow_item`, and `finance_settings` are account-owned configuration, not a hardcoded personal budget. All monetary values are integer cents. The database deliberately excludes bank credentials, full account numbers, and raw statement files; labels should be masked descriptions only. Owners can add/update ledger data and mark items paid/paused. Confirmed accountability partners can read the same dashboard and attach an Approve/Hold decision plus note, but cannot change the owner's amounts or dates. Either participant can now revoke a partnership.
+    >
+    > Gambling exclusion is an enforceable $0 lock rather than a decorative budget category. Active gambling cashflow creation/updates return `409 gambling_blocked`; already-paid historical losses may still be recorded for an honest history. The pilot provides no UI or API unlock control and converts the rejection into an explicit safety message.
+    >
+    > The owner web page can now generate its own one-time pairing code, so a finance-only household pilot does not require the Expo app to bootstrap sharing. The page remains framework-free and uses the existing one-time-secret browser account model. That model is suitable for this small private pilot because no bank login data is stored, but password/recovery auth should precede any broader public finance product.
+    >
+    > Render's current Free Postgres tier expires each database after 30 days and allows a 14-day upgrade grace period before deletion. Replacing the expired early-stage database is acceptable for this project because it contains only disposable test accounts/pairings/check-ins, but doing so invalidates those saved credentials and invite relationships. A durable finance pilot should use a paid persistent database rather than repeatedly rotating free instances.
+
 **Explicitly deferred past this batch:** automatic background summary sync, push notifications to partners, Open Food Facts as a secondary/barcode nutrition source, auto-deriving check-in values from local trackers, `activity_log` repo/UI, min/max range-based targets. Location-module enhancements remain out of this batch per the user's own "not important yet."
 
 ## Verification

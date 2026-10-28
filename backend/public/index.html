@@ -32,6 +32,21 @@
       <p id="invite-success" class="muted" hidden></p>
     </section>
 
+    <section id="my-finance-card" class="card" hidden>
+      <h2>Household money plan</h2>
+      <p class="muted" style="margin-bottom:12px">Track paydays, bills, balances, and partner decisions without storing bank passwords or full account numbers.</p>
+      <a class="button-link" id="my-finance-link" href="/finance.html">Open my finance dashboard</a>
+    </section>
+
+    <section id="share-card" class="card" hidden>
+      <h2>Share with your partner</h2>
+      <p class="muted" style="margin-bottom:8px">Generate a one-time code. Your partner creates their own account here and accepts it.</p>
+      <button id="create-invite-button">Create invite code</button>
+      <p id="created-invite" class="invite-code" hidden></p>
+      <p id="share-error" class="error" hidden></p>
+      <div id="supporters" class="compact-list"></div>
+    </section>
+
     <section id="partners-card" class="card" hidden>
       <h2>People you're supporting</h2>
       <ul class="partner-list" id="partner-list"></ul>
@@ -44,6 +59,8 @@
     const setupCard = document.getElementById('setup-card');
     const inviteCard = document.getElementById('invite-card');
     const partnersCard = document.getElementById('partners-card');
+    const myFinanceCard = document.getElementById('my-finance-card');
+    const shareCard = document.getElementById('share-card');
     const signOutButton = document.getElementById('sign-out-button');
 
     function render() {
@@ -51,8 +68,13 @@
       setupCard.hidden = Boolean(credential);
       inviteCard.hidden = !credential;
       partnersCard.hidden = !credential;
+      myFinanceCard.hidden = !credential;
+      shareCard.hidden = !credential;
       signOutButton.hidden = !credential;
-      if (credential) loadPartners();
+      if (credential) {
+        document.getElementById('my-finance-link').href = `/finance.html?id=${encodeURIComponent(credential.accountId)}&name=${encodeURIComponent(credential.displayName)}`;
+        loadPartners();
+      }
     }
 
     document.getElementById('create-account-button').addEventListener('click', async () => {
@@ -98,20 +120,60 @@
       render();
     });
 
+    document.getElementById('create-invite-button').addEventListener('click', async () => {
+      const output = document.getElementById('created-invite');
+      const error = document.getElementById('share-error');
+      output.hidden = true;
+      error.hidden = true;
+      try {
+        const result = await api('/pairings/invite', { method: 'POST' });
+        output.textContent = result.code;
+        output.hidden = false;
+      } catch (err) {
+        error.textContent = err.message;
+        error.hidden = false;
+      }
+    });
+
     async function loadPartners() {
       const list = document.getElementById('partner-list');
       const empty = document.getElementById('no-partners');
       try {
-        const { asPartner } = await api('/pairings');
+        const { asPartner, asTrackedUser } = await api('/pairings');
         list.innerHTML = '';
         empty.hidden = asPartner.length > 0;
         for (const p of asPartner) {
           const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = `/partner.html?id=${encodeURIComponent(p.trackedAccountId)}&name=${encodeURIComponent(p.trackedDisplayName)}`;
-          a.textContent = p.trackedDisplayName;
-          li.appendChild(a);
+          const name = document.createElement('strong');
+          name.textContent = p.trackedDisplayName;
+          const actions = document.createElement('div');
+          actions.className = 'partner-actions';
+          const checkIns = document.createElement('a');
+          checkIns.href = `/partner.html?id=${encodeURIComponent(p.trackedAccountId)}&name=${encodeURIComponent(p.trackedDisplayName)}`;
+          checkIns.textContent = 'Check-ins';
+          const finance = document.createElement('a');
+          finance.href = `/finance.html?id=${encodeURIComponent(p.trackedAccountId)}&name=${encodeURIComponent(p.trackedDisplayName)}`;
+          finance.textContent = 'Money plan';
+          actions.append(checkIns, finance);
+          li.append(name, actions);
           list.appendChild(li);
+        }
+        const supporters = document.getElementById('supporters');
+        supporters.innerHTML = asTrackedUser.length ? '<h3>People who can view your shared data</h3>' : '';
+        for (const p of asTrackedUser) {
+          const row = document.createElement('div');
+          row.className = 'compact-row';
+          const name = document.createElement('span');
+          name.textContent = p.partnerDisplayName;
+          const revoke = document.createElement('button');
+          revoke.className = 'danger-text small-button';
+          revoke.textContent = 'Revoke';
+          revoke.addEventListener('click', async () => {
+            await api(`/pairings/${encodeURIComponent(p.partnershipId)}`, { method: 'DELETE' });
+            loadPartners();
+          });
+          row.append(name, revoke);
+          supporters.appendChild(row);
         }
       } catch (err) {
         if (err.status === 401) {

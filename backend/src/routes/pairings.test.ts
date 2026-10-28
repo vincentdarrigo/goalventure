@@ -101,4 +101,29 @@ describe('pairings', () => {
     });
     expect(accept.statusCode).toBe(400);
   });
+
+  test('either participant can revoke a partnership', async () => {
+    const owner = await createTestAccount(app, 'Vince');
+    const partner = await createTestAccount(app, 'Partner');
+    const invite = await app.inject({ method: 'POST', url: '/pairings/invite', headers: { authorization: owner.authHeader } });
+    const { code } = invite.json() as { code: string };
+    await app.inject({
+      method: 'POST',
+      url: '/pairings/accept',
+      headers: { authorization: partner.authHeader },
+      payload: { code },
+    });
+    const list = await app.inject({ method: 'GET', url: '/pairings', headers: { authorization: owner.authHeader } });
+    const partnershipId = (list.json() as { asTrackedUser: { partnershipId: string }[] }).asTrackedUser[0]?.partnershipId;
+
+    const revoked = await app.inject({
+      method: 'DELETE',
+      url: `/pairings/${partnershipId}`,
+      headers: { authorization: partner.authHeader },
+    });
+    expect(revoked.statusCode).toBe(204);
+
+    const after = await app.inject({ method: 'GET', url: '/pairings', headers: { authorization: owner.authHeader } });
+    expect(after.json()).toMatchObject({ asTrackedUser: [], asPartner: [] });
+  });
 });

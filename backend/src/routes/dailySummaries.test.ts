@@ -52,7 +52,7 @@ describe('daily summaries', () => {
 
     const list = await app.inject({
       method: 'GET',
-      url: `/accounts/${owner.accountId}/daily-summaries`,
+      url: `/accounts/${owner.accountId}/daily-summaries?from=2026-09-01&to=2026-09-30`,
       headers: { authorization: owner.authHeader },
     });
     const body = list.json() as { summaries: { date: string; payload: Record<string, unknown> }[] };
@@ -74,7 +74,7 @@ describe('daily summaries', () => {
 
     const asPartner = await app.inject({
       method: 'GET',
-      url: `/accounts/${owner.accountId}/daily-summaries`,
+      url: `/accounts/${owner.accountId}/daily-summaries?from=2026-09-01&to=2026-09-30`,
       headers: { authorization: partner.authHeader },
     });
     expect(asPartner.statusCode).toBe(200);

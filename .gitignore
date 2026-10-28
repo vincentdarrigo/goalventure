@@ -35,6 +35,10 @@ yarn-error.*
 .env.local
 .env*.local
 
+# private local documents and app-delivered attachments
+/Personal/
+/.codex-remote-attachments/
+
 # Claude Code runtime state (not project config)
 .claude/scheduled_tasks.lock
 

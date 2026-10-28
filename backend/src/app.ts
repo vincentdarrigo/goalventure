@@ -10,6 +10,7 @@ import { registerAccountRoutes } from './routes/accounts.js';
 import { registerCheckInItemRoutes } from './routes/checkInItems.js';
 import { registerDailySummaryRoutes } from './routes/dailySummaries.js';
 import { registerDeviceLinkCodeRoutes } from './routes/deviceLinkCodes.js';
+import { registerFinanceRoutes } from './routes/finance.js';
 import { registerPairingRoutes } from './routes/pairings.js';
 
 // Sibling of dist/ (after `tsc`) and of src/ (under `tsx`) alike — public/
@@ -35,6 +36,7 @@ export function buildApp<TQueryResult extends PgQueryResultHKT>(
   registerAccountRoutes(app, db);
   registerDeviceLinkCodeRoutes(app, db);
   registerPairingRoutes(app, db);
+  registerFinanceRoutes(app, db);
   registerCheckInItemRoutes(app, db);
   registerDailySummaryRoutes(app, db);
 

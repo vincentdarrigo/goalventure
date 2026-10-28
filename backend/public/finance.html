@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Goalventure — Household money plan</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="wide-main">
+    <div class="top-bar">
+      <div>
+        <a href="/" class="back-link">← Accountability home</a>
+        <h1 id="page-title">Household money plan</h1>
+      </div>
+      <button id="refresh-button" class="secondary small-button">Refresh</button>
+    </div>
+
+    <div id="gambling-lock" class="safety-banner" hidden>
+      <strong>Gambling lock is on</strong>
+      <span>$0 is available for gambling. New gambling expenses are blocked and future imported matches will be flagged.</span>
+    </div>
+
+    <section class="summary-grid" aria-label="Cashflow summary">
+      <div class="metric"><span>Available cash</span><strong id="available-cash">—</strong></div>
+      <div class="metric"><span>Planned income</span><strong id="planned-income">—</strong></div>
+      <div class="metric"><span>Planned expenses</span><strong id="planned-expenses">—</strong></div>
+      <div class="metric"><span>After plan</span><strong id="after-plan">—</strong></div>
+    </section>
+
+    <p id="page-error" class="error" hidden></p>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <h2>Upcoming plan</h2>
+          <p class="muted">Concrete dated income and expenses. Paid and canceled items stay visible for accountability.</p>
+        </div>
+      </div>
+      <div id="cashflow-list" class="stack-list"></div>
+      <p id="no-cashflow" class="muted" hidden>No paydays or bills entered yet.</p>
+    </section>
+
+    <section class="card">
+      <h2>Accounts and debts</h2>
+      <p class="muted">Use names or masked labels only. Never enter a bank password or full account number.</p>
+      <div id="account-list" class="stack-list"></div>
+      <p id="no-accounts" class="muted" hidden>No accounts entered yet.</p>
+    </section>
+
+    <section id="owner-tools" hidden>
+      <section class="card">
+        <h2>Add a payday or bill</h2>
+        <form id="cashflow-form" class="form-grid">
+          <label>Name<input name="name" type="text" placeholder="e.g. Nov 10 paycheck" required /></label>
+          <label>Amount<input name="amount" type="number" min="0.01" step="0.01" required /></label>
+          <label>Date<input name="dueDate" type="date" required /></label>
+          <label>Income or expense
+            <select name="direction"><option value="expense">Expense</option><option value="income">Income</option></select>
+          </label>
+          <label>Category
+            <select name="category">
+              <option value="debt">Debt</option><option value="income">Income</option><option value="housing">Housing</option>
+              <option value="family">Family</option><option value="subscription">Subscription</option><option value="food">Food</option>
+              <option value="transport">Transport</option><option value="health">Health</option><option value="travel">Travel</option>
+              <option value="fun">Fun</option><option value="gambling">Gambling (blocked)</option><option value="other">Other</option>
+            </select>
+          </label>
+          <label>Priority
+            <select name="priority"><option value="critical">Critical</option><option value="required" selected>Required</option><option value="flexible">Flexible</option></select>
+          </label>
+          <label>Paid from / deposited to<select name="financeAccountId" id="cashflow-account"><option value="">Unassigned</option></select></label>
+          <label class="checkbox-label"><input name="autopay" type="checkbox" /> Autopay</label>
+          <label class="full-width">Notes<textarea name="notes" rows="2" placeholder="Optional context for the household"></textarea></label>
+          <button type="submit" class="full-width">Add to plan</button>
+        </form>
+        <p id="cashflow-error" class="error" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2>Add an account or debt</h2>
+        <form id="account-form" class="form-grid">
+          <label>Name<input name="name" type="text" placeholder="e.g. Amazon Visa •••• 1234" required /></label>
+          <label>Type
+            <select name="kind"><option value="checking">Checking</option><option value="credit_card">Credit card</option><option value="loan">Loan</option><option value="installment">Installment</option><option value="cash">Cash</option><option value="other">Other</option></select>
+          </label>
+          <label>Current balance<input name="currentBalance" type="number" step="0.01" value="0" /></label>
+          <label>Available balance<input name="availableBalance" type="number" step="0.01" placeholder="Checking/cash only" /></label>
+          <label>Credit limit<input name="creditLimit" type="number" min="0" step="0.01" placeholder="Credit cards only" /></label>
+          <label>Minimum payment<input name="minimumPayment" type="number" min="0" step="0.01" /></label>
+          <label>APR %<input name="apr" type="number" min="0" step="0.01" /></label>
+          <label>Due day<input name="dueDay" type="number" min="1" max="31" /></label>
+          <label class="checkbox-label"><input name="autopay" type="checkbox" /> Autopay</label>
+          <label class="full-width">Notes<textarea name="notes" rows="2"></textarea></label>
+          <button type="submit" class="full-width">Add account</button>
+        </form>
+        <p id="account-error" class="error" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2>Safety rule</h2>
+        <label class="checkbox-label"><input id="gambling-checkbox" type="checkbox" disabled /> Gambling spending blocked ($0)</label>
+        <p class="muted">This pilot has no unlock control. Historical losses may be recorded as already paid, but no active gambling expense can be added.</p>
+      </section>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const credential = getCredential();
+    if (!credential) location.replace('/');
+    const ownerId = params.get('id') || credential?.accountId;
+    const ownerName = params.get('name') || credential?.displayName || 'Household';
+    let dashboard;
+
+    const money = (cents) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents || 0) / 100);
+    const cents = (value) => Math.round(Number(value || 0) * 100);
+    const optionalCents = (value) => value === '' ? null : cents(value);
+    const optionalNumber = (value) => value === '' ? null : Number(value);
+    const active = (item) => !['paid', 'canceled', 'paused'].includes(item.status);
+
+    function showError(id, error) {
+      const el = document.getElementById(id);
+      el.textContent = error.message === 'gambling_blocked'
+        ? 'Gambling is locked at $0. This expense was not added.'
+        : error.message;
+      el.hidden = false;
+    }
+
+    function text(tag, value, className) {
+      const el = document.createElement(tag);
+      el.textContent = value;
+      if (className) el.className = className;
+      return el;
+    }
+
+    async function load() {
+      const error = document.getElementById('page-error');
+      error.hidden = true;
+      try {
+        dashboard = await api(`/accounts/${encodeURIComponent(ownerId)}/finance`);
+        render();
+      } catch (err) {
+        error.textContent = err.status === 403 ? 'This household has not shared its finance plan with this account.' : err.message;
+        error.hidden = false;
+      }
+    }
+
+    function render() {
+      document.getElementById('page-title').textContent = `${ownerName}'s money plan`;
+      document.getElementById('owner-tools').hidden = dashboard.viewerRole !== 'owner';
+      document.getElementById('gambling-lock').hidden = !dashboard.settings.gamblingBlocked;
+      document.getElementById('gambling-checkbox').checked = dashboard.settings.gamblingBlocked;
+
+      const available = dashboard.accounts
+        .filter((a) => a.status === 'active' && ['checking', 'cash'].includes(a.kind))
+        .reduce((sum, a) => sum + (a.availableBalanceCents ?? a.currentBalanceCents), 0);
+      const income = dashboard.items.filter((i) => active(i) && i.direction === 'income').reduce((sum, i) => sum + i.amountCents, 0);
+      const expenses = dashboard.items.filter((i) => active(i) && i.direction === 'expense').reduce((sum, i) => sum + i.amountCents, 0);
+      document.getElementById('available-cash').textContent = money(available);
+      document.getElementById('planned-income').textContent = money(income);
+      document.getElementById('planned-expenses').textContent = money(expenses);
+      const after = available + income - expenses;
+      const afterEl = document.getElementById('after-plan');
+      afterEl.textContent = money(after);
+      afterEl.className = after < 0 ? 'negative' : '';
+
+      renderAccounts();
+      renderCashflow();
+    }
+
+    function renderAccounts() {
+      const list = document.getElementById('account-list');
+      const empty = document.getElementById('no-accounts');
+      const select = document.getElementById('cashflow-account');
+      list.innerHTML = '';
+      empty.hidden = dashboard.accounts.length > 0;
+      select.innerHTML = '<option value="">Unassigned</option>';
+      for (const account of dashboard.accounts) {
+        const row = document.createElement('div');
+        row.className = 'ledger-row';
+        const main = document.createElement('div');
+        main.append(text('strong', account.name), text('span', account.kind.replace('_', ' '), 'tag'));
+        const details = document.createElement('div');
+        details.className = 'ledger-details';
+        details.append(text('span', `Balance ${money(account.currentBalanceCents)}`));
+        if (account.availableBalanceCents !== null) details.append(text('span', `Available ${money(account.availableBalanceCents)}`));
+        if (account.minimumPaymentCents !== null) details.append(text('span', `Minimum ${money(account.minimumPaymentCents)}`));
+        if (account.aprBasisPoints !== null) details.append(text('span', `APR ${(account.aprBasisPoints / 100).toFixed(2)}%`));
+        if (account.dueDay !== null) details.append(text('span', `Due day ${account.dueDay}`));
+        if (account.autopay) details.append(text('span', 'Autopay', 'tag success'));
+        row.append(main, details);
+        list.appendChild(row);
+
+        if (account.status === 'active') {
+          const option = document.createElement('option');
+          option.value = account.id;
+          option.textContent = account.name;
+          select.appendChild(option);
+        }
+      }
+    }
+
+    function renderCashflow() {
+      const list = document.getElementById('cashflow-list');
+      const empty = document.getElementById('no-cashflow');
+      list.innerHTML = '';
+      empty.hidden = dashboard.items.length > 0;
+      for (const item of dashboard.items) {
+        const row = document.createElement('div');
+        row.className = `cashflow-row ${item.status}`;
+        const title = document.createElement('div');
+        title.className = 'cashflow-title';
+        title.append(text('strong', item.name), text('strong', `${item.direction === 'income' ? '+' : '−'}${money(item.amountCents)}`, item.direction));
+        const meta = text('div', `${item.dueDate} · ${item.category} · ${item.priority} · ${item.status}`, 'cashflow-meta');
+        const decision = text('div', `Partner: ${item.partnerDecision}${item.partnerNote ? ` — ${item.partnerNote}` : ''}`, `decision ${item.partnerDecision}`);
+        row.append(title, meta, decision);
+
+        const actions = document.createElement('div');
+        actions.className = 'row-actions';
+        if (dashboard.viewerRole === 'owner' && active(item)) {
+          const paid = text('button', 'Mark paid', 'secondary small-button');
+          paid.addEventListener('click', () => updateItem(item.id, { status: 'paid' }));
+          const pause = text('button', 'Pause', 'secondary small-button');
+          pause.addEventListener('click', () => updateItem(item.id, { status: 'paused' }));
+          actions.append(paid, pause);
+        }
+        if (dashboard.viewerRole === 'partner') {
+          const approve = text('button', 'Approve', 'small-button');
+          approve.addEventListener('click', () => decide(item.id, 'approved'));
+          const hold = text('button', 'Hold', 'secondary small-button');
+          hold.addEventListener('click', () => decide(item.id, 'hold'));
+          actions.append(approve, hold);
+        }
+        if (actions.children.length) row.appendChild(actions);
+        list.appendChild(row);
+      }
+    }
+
+    async function updateItem(id, changes) {
+      await api(`/finance/items/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(changes) });
+      await load();
+    }
+
+    async function decide(id, decision) {
+      const note = prompt(decision === 'hold' ? 'Why should this payment be held?' : 'Optional note for this approval:', '') || null;
+      await api(`/accounts/${encodeURIComponent(ownerId)}/finance/items/${encodeURIComponent(id)}/decision`, {
+        method: 'PATCH', body: JSON.stringify({ decision, note }),
+      });
+      await load();
+    }
+
+    document.getElementById('refresh-button').addEventListener('click', load);
+    document.getElementById('cashflow-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const error = document.getElementById('cashflow-error');
+      error.hidden = true;
+      const data = new FormData(form);
+      try {
+        await api('/finance/items', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: data.get('name'), amountCents: cents(data.get('amount')), dueDate: data.get('dueDate'),
+            direction: data.get('direction'), category: data.get('category'), priority: data.get('priority'),
+            financeAccountId: data.get('financeAccountId') || null, autopay: data.get('autopay') === 'on',
+            notes: data.get('notes') || null,
+          }),
+        });
+        form.reset();
+        await load();
+      } catch (err) { showError('cashflow-error', err); }
+    });
+
+    document.getElementById('account-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const error = document.getElementById('account-error');
+      error.hidden = true;
+      const data = new FormData(form);
+      try {
+        await api('/finance/accounts', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: data.get('name'), kind: data.get('kind'), currentBalanceCents: cents(data.get('currentBalance')),
+            availableBalanceCents: optionalCents(data.get('availableBalance')), creditLimitCents: optionalCents(data.get('creditLimit')),
+            minimumPaymentCents: optionalCents(data.get('minimumPayment')),
+            aprBasisPoints: data.get('apr') === '' ? null : Math.round(Number(data.get('apr')) * 100),
+            dueDay: optionalNumber(data.get('dueDay')), autopay: data.get('autopay') === 'on', notes: data.get('notes') || null,
+          }),
+        });
+        form.reset();
+        await load();
+      } catch (err) { showError('account-error', err); }
+    });
+
+    load();
+  </script>
+</body>
+</html>

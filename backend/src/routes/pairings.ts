@@ -12,6 +12,7 @@ import { createDeviceLinkCode, redeemDeviceLinkCode } from '../services/deviceLi
 const AcceptBody = z.object({
   code: z.string().min(1),
 });
+const PairingParams = z.object({ id: z.string().uuid() });
 
 const REDEEM_ERROR_STATUS = {
   not_found: 404,
@@ -101,5 +102,19 @@ export function registerPairingRoutes<TQueryResult extends PgQueryResultHKT>(
       }));
 
     return reply.status(200).send({ asTrackedUser, asPartner });
+  });
+
+  app.delete('/pairings/:id', async (request, reply) => {
+    const auth = await requireAccount(db, request, reply);
+    if (!auth) return;
+    const params = PairingParams.safeParse(request.params);
+    if (!params.success) return reply.status(400).send({ error: 'invalid_params' });
+
+    const row = await db.query.partnership.findFirst({ where: eq(partnership.id, params.data.id) });
+    if (!row || (row.accountId !== auth.accountId && row.partnerAccountId !== auth.accountId)) {
+      return reply.status(404).send({ error: 'not_found' });
+    }
+    await db.delete(partnership).where(eq(partnership.id, row.id));
+    return reply.status(204).send();
   });
 }
